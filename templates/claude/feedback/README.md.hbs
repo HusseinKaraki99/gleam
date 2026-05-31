@@ -1,0 +1,26 @@
+# Feedback loop
+
+This project learns from how you correct it. The `capture-feedback` hook
+(`.claude/hooks/capture-feedback.cjs`) watches your prompts and appends **durable
+guidance** to `log.md` — so standing instructions don't get lost between sessions.
+
+## What gets captured
+
+- Anything you mark explicitly with `#feedback` in a prompt.
+- Standing-instruction signals like "from now on…", "always/never…",
+  "make sure to…", "stop doing…", "use X instead of Y".
+
+One-off, task-specific messages are ignored — only durable guidance is logged.
+Capture is silent and never blocks your prompt.
+
+## Closing the loop
+
+Periodically run `/feedback-review` to cluster recurring feedback and promote it
+into `CLAUDE.md` or `.claude/rules/`, where Claude reads it every session. Use
+`/feedback-review --apply` to write the promoted rules and archive the log.
+
+## Privacy
+
+The log lives entirely in this repo (`.claude/feedback/`). Nothing is sent
+anywhere. Commit it to share standing guidance with your team, or add
+`.claude/feedback/` to `.gitignore` to keep it local.

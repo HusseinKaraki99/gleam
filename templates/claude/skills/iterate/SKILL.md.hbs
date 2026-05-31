@@ -1,0 +1,102 @@
+---
+name: iterate
+description: Iterate on a UI component, page, or section based on developer feedback. Shows alternatives, applies changes, and saves design preferences to memory.
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit, AskUserQuestion, Agent, WebSearch, mcp__figma__get_screenshot, mcp__figma__get_design_context, mcp__figma__search_design_system
+argument-hint: "<component-or-page> [feedback description]"
+---
+
+# Iterate
+
+Iterate on a UI component, page, or section based on developer feedback. This skill closes the feedback loop — when the developer doesn't like something, this skill helps explore alternatives, apply changes, and remember preferences for next time.
+
+## When to use
+
+- Developer says "I don't like how this looks"
+- Developer wants to explore alternative designs
+- Developer wants to refine spacing, colors, layout
+- Developer wants to match a reference (screenshot, URL, Figma design)
+
+## Step 1 — Understand the feedback
+
+If `$ARGUMENTS` includes feedback text, parse it. Otherwise ask:
+
+Use AskUserQuestion with options like:
+- "Layout / spacing issues" — things are too cramped, too spread out, misaligned
+- "Color / contrast issues" — colors don't feel right, too bright, too muted
+- "Component style" — wrong variant, want a different look
+- "Missing elements" — needs an icon, badge, divider, etc.
+- "Reference-based" — "make it look like X" (URL, screenshot, or Figma link)
+
+## Step 2 — Research and propose alternatives
+
+Based on the feedback type:
+
+### For "make it look like X" (reference-based)
+1. If Figma URL → use `get_design_context` to read the reference design
+2. If web URL → use WebSearch to understand the design patterns used
+3. Analyze what specifically is different from current implementation
+4. Propose specific changes to match the reference
+
+### For layout/spacing/color issues
+1. Read the current component code
+2. Research how similar components look in popular design systems (WebSearch for "best [component] design patterns 2026")
+3. Propose 2-3 alternatives using AskUserQuestion with previews:
+
+```
+Option A: Compact layout
+- Reduced padding (space-2 → space-1)
+- Tighter line height
+- Smaller border radius
+
+Option B: Airy layout
+- Increased padding (space-4 → space-6)
+- More whitespace between elements
+- Larger border radius
+
+Option C: Reference-inspired
+- Based on [reference]
+- [specific changes]
+```
+
+### For component style changes
+1. Check what variants exist in `{{config.org}}/ui`
+2. Show available variants via AskUserQuestion
+3. If none match, propose new variant additions
+
+## Step 3 — Apply the chosen changes
+
+1. Make the code changes
+2. If the component is in `packages/ui/`, update the `ComponentMeta`
+3. If design tokens need adjusting, update `packages/design-tokens/tokens.css`
+
+## Step 4 — Save the preference to memory
+
+**This is critical.** After the developer confirms they like the result:
+
+1. Save a memory entry describing the preference:
+   - What the developer didn't like (the "before")
+   - What they preferred instead (the "after")
+   - The general principle this implies (e.g., "prefers compact layouts", "dislikes rounded corners", "wants more contrast")
+
+2. If this preference applies broadly, update `.claude/rules/design-system.md` with a new rule
+
+Example memory entries:
+- "Developer prefers compact table layouts with minimal padding (space-2). Applied to UserTable, should apply to all data tables."
+- "Developer dislikes pill-shaped badges (full radius). Prefers squared badges matching the 'minimal' personality."
+- "Developer wants card shadows to be subtle (shadow-sm only). No elevated cards unless explicitly requested."
+
+## Step 5 — Verify
+
+Ask the developer if they're happy with the result:
+- **Yes** → save the memory, move on
+- **Still not right** → loop back to Step 2 with refined feedback
+- **Show me more options** → research more alternatives and present them
+
+## Rules
+
+- **Always present options before making changes** — never assume what the developer wants
+- **Always save the preference to memory** — this is how the system learns
+- **Always use design tokens** — even when iterating, never hardcode values
+- **Research real-world examples** — use WebSearch to show how other products handle the same component
+- **Be specific in memory entries** — "prefers X over Y because Z" is better than "changed X"

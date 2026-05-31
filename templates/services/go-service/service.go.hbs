@@ -1,0 +1,52 @@
+package {{name}}
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/rs/zerolog"
+
+	httpAdapter "{{config.org}}/services/{{name}}/adapters/http"
+	"{{config.org}}/services/{{name}}/ports"
+	"{{config.org}}/services/{{name}}/usecase"
+)
+
+type Service struct {
+	router  chi.Router
+	useCase *usecase.UseCase
+	logger  zerolog.Logger
+}
+
+func New(repo ports.Repository, logger zerolog.Logger) *Service {
+	uc := usecase.New(repo, logger)
+	handler := httpAdapter.NewHandler(uc, logger)
+
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Recoverer)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"},
+	}))
+
+	handler.RegisterRoutes(r)
+
+	return &Service{
+		router:  r,
+		useCase: uc,
+		logger:  logger,
+	}
+}
+
+func (s *Service) Handler() http.Handler {
+	return s.router
+}
+
+func (s *Service) Shutdown(_ context.Context) error {
+	return nil
+}

@@ -1,0 +1,87 @@
+# Project Status — {{config.displayName}}
+
+## Current Phase: Discovery
+
+> This file tracks the project lifecycle. Update it as you progress through phases.
+> The phase-gate agent validates completeness before phase transitions.
+
+---
+
+## Lifecycle Phases
+
+### 1. Discovery ← **YOU ARE HERE**
+- [ ] PRD completed (`docs/product/PRD.md`)
+- [ ] Problem statement validated
+- [ ] Target users defined with personas
+- [ ] Core user flows mapped (minimum 3)
+- [ ] MVP scope defined (in-scope AND out-of-scope)
+- [ ] Competitive research completed
+- [ ] Success metrics defined
+
+**Gate:** Run phase-gate agent to validate → Spec phase
+
+### 2. Specification
+- [ ] Feature specs created for all MVP features (`docs/specs/`)
+- [ ] User stories with acceptance criteria
+- [ ] Data model designed
+- [ ] API endpoints designed
+- [ ] Edge cases documented
+- [ ] Test plans written
+
+**Gate:** Run phase-gate agent to validate → Architecture phase
+
+### 3. Architecture
+- [ ] ADRs for key tech decisions (`docs/adr/`)
+- [ ] Database schema finalized
+- [ ] API contracts defined
+- [ ] Component architecture designed
+- [ ] Implementation plans created (`docs/plans/`)
+{{#ifMultiTenancy config}}
+- [ ] Multi-tenancy strategy validated
+{{/ifMultiTenancy}}
+{{#if config.design.figmaFileKey}}
+- [ ] Figma designs completed and linked
+{{/if}}
+- [ ] Infrastructure plan documented
+
+**Gate:** Run phase-gate agent to validate → Development phase
+
+### 4. Development
+- [ ] Core infrastructure set up (DB, auth, CI/CD)
+- [ ] Feature implementation in progress
+- [ ] Tests written alongside code
+- [ ] Code reviews via `/self-review`
+{{#if config.hasFrontend}}
+- [ ] Design review via `/design-review`
+{{/if}}
+
+**Gate:** Run phase-gate agent to validate → Review phase
+
+### 5. Review & QA
+- [ ] All acceptance criteria met
+- [ ] Test suite passing (unit + integration + e2e)
+- [ ] Security audit passed
+- [ ] Performance benchmarks met
+- [ ] Documentation up to date
+- [ ] `/sync-docs` run with no drift detected
+
+**Gate:** Run phase-gate agent to validate → Deploy phase
+
+### 6. Deployment
+- [ ] Staging deployment successful
+- [ ] Production deployment
+- [ ] Monitoring configured
+- [ ] Runbook documented
+
+---
+
+## Quick Commands
+
+| Phase | Key Skills |
+|-------|-----------|
+| Discovery | `/discover`, `/research <topic>` |
+| Specification | `/spec <feature>`, `/plan-feature <feature>` |
+| Architecture | `/adr <decision>`, `/plan-review` |
+| Development | `/new-feature <name>`, `/commit`, `/self-review` |
+| Review | `/self-review`, `/design-review`, `/sync-docs` |
+| Deployment | `/deploy`, `/local-setup doctor` |

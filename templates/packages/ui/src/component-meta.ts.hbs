@@ -1,0 +1,23 @@
+/**
+ * Machine-readable component metadata for agentic design systems.
+ *
+ * Each component exports a `meta` object conforming to this interface,
+ * enabling AI agents and design tools to introspect available components,
+ * their variants, slots, and accessibility roles.
+ */
+export interface ComponentMeta {
+  /** PascalCase component name */
+  name: string;
+  /** Human-readable description of the component */
+  description: string;
+  /** Map of variant prop names to their allowed values */
+  variants: Record<string, string[]>;
+  /** Map of variant prop names to their default value */
+  defaultVariant: Record<string, string>;
+  /** Named content slots the component accepts (e.g. 'icon', 'children') */
+  slots: string[];
+  /** WAI-ARIA role for the rendered element */
+  accessibilityRole?: string;
+  /** Figma component key for Code Connect mapping */
+  figmaComponentKey?: string;
+}

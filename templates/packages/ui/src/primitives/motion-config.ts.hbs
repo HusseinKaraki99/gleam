@@ -1,0 +1,36 @@
+'use client';
+
+import * as React from 'react';
+import { MotionConfig as MotionConfigPrimitive } from 'motion/react';
+import { durations, easings } from '{{config.org}}/design-tokens';
+
+/**
+ * Motion provider that applies design-token durations and easings
+ * to all descendant motion components.
+ *
+ * Wrap your app root (or a subtree) with this provider.
+ *
+ * Motion level: {{config.design.motionLevel}}
+ */
+export function DesignMotionProvider({ children }: { children: React.ReactNode }) {
+{{#ifEquals config.design.motionLevel "none"}}
+  return React.createElement(
+    MotionConfigPrimitive,
+    { reducedMotion: 'always' },
+    children,
+  );
+{{else}}
+  return React.createElement(
+    MotionConfigPrimitive,
+    {
+      transition: {
+        duration: durations.normal / 1000,
+        ease: [0.16, 1, 0.3, 1], // ease-out from tokens
+      },
+    },
+    children,
+  );
+{{/ifEquals}}
+}
+
+export { durations, easings };

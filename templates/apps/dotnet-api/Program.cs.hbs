@@ -1,0 +1,51 @@
+using Serilog;
+using {{pascalCase name}}.Common.Extensions;
+using {{pascalCase name}}.Common.Middleware;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new()
+    {
+        Title = "{{project.displayName}} API",
+        Description = "{{project.description}}",
+        Version = "v1",
+    });
+});
+
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+});
+
+builder.Services.AddApplicationServices(builder.Configuration);
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseSerilogRequestLogging();
+app.UseCors();
+app.UseMiddleware<ExceptionMiddleware>();
+app.MapControllers();
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    Status = "ok",
+    Timestamp = DateTime.UtcNow.ToString("o"),
+}));
+
+app.Run();

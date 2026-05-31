@@ -1,0 +1,88 @@
+---
+globs: "**/*.{test,spec}.{ts,tsx,go}"
+---
+
+# Testing Rules
+
+## Test placement
+
+- Test files live **next to** the source file they test.
+  - TypeScript: `user.service.ts` -> `user.service.spec.ts`
+  - Go: `handler.go` -> `handler_test.go`
+  - C#: `UsersService.cs` -> `UsersServiceTests.cs` (in test project)
+- Integration / E2E tests live in a dedicated `tests/` or `e2e/` folder at the app root.
+- Test fixtures and factories live in `tests/fixtures/` or `tests/factories/`.
+
+## Coverage gates
+
+- **80% minimum** coverage on new code (lines + branches).
+- Critical paths (auth, payments, data mutations) require **95%+ coverage**.
+- Do not game coverage with meaningless assertions. Every test must verify meaningful behavior.
+
+## Test naming
+
+- Describe **what** is being tested and **what** the expected outcome is.
+{{#ifHasStack config "nestjs"}}
+- NestJS: `describe('<ServiceName>', () => { it('should <behavior> when <condition>') })`
+{{/ifHasStack}}
+{{#ifHasStack config "next-ssr"}}
+- React: `describe('<ComponentName>', () => { it('renders <what> when <condition>') })`
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+- React: `describe('<ComponentName>', () => { it('renders <what> when <condition>') })`
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+- Go: `func Test<Function>_<Scenario>(t *testing.T)`
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+- .NET: `[Fact] public async Task <Method>_<Scenario>_<ExpectedResult>()`
+{{/ifHasStack}}
+
+## What to test per layer
+
+### API / Controller layer
+- Request validation (reject invalid input).
+- Authorization (reject unauthorized requests).
+- Response format (correct status codes, envelope shape).
+- Error responses (meaningful error messages).
+
+### Service / Use-case layer
+- Business logic correctness.
+- Edge cases and boundary conditions.
+- Error handling (domain exceptions, validation failures).
+- Side effects (events emitted, notifications sent).
+
+### Data access layer
+- Query correctness (filters, ordering, pagination).
+- Constraint enforcement (unique, foreign key).
+- Migration compatibility (up + down).
+
+### UI component layer
+- User interactions (click, type, submit).
+- Conditional rendering.
+- Accessibility (keyboard navigation, screen reader text).
+- Loading and error states.
+
+## Test isolation
+
+- Each test must be independent. No shared mutable state.
+- Use `beforeEach` / `setUp` to create fresh state.
+- Clean up after tests (close connections, clear mocks).
+- Tests must pass in any order and when run in parallel.
+
+## Mocking guidelines
+
+- Mock at boundaries (HTTP, database, third-party APIs). Never mock internal implementation.
+- Prefer dependency injection over module-level mocking.
+- Use typed mocks. Avoid `jest.fn()` without type constraints.
+- Assert mock interactions only when the interaction IS the behavior being tested.
+
+## Forbidden testing patterns
+
+- `test.skip` / `t.Skip()` without a linked issue -- stale skipped tests rot.
+- `// eslint-disable` or `// nolint` in test files -- tests follow the same code standards.
+- Snapshot tests for complex components -- they break on every change and teach nothing.
+- `sleep` / `setTimeout` to wait for async operations -- use proper async utilities.
+- Testing private methods directly -- test through the public API.
+- Copy-pasted test code -- extract shared setup into factories or fixtures.
+- `expect(true).toBe(true)` or equivalent no-op assertions.

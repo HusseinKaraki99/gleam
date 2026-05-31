@@ -1,0 +1,27 @@
+Run /start-session at the beginning of every new session
+Run /self-review before pushing your branch
+Keep files under 250 lines (TS/TSX) or 400 lines (Go) or 300 lines (C#)
+One exported component per file -- extract sub-components
+Barrel exports (index.ts) are the public API of every module
+Tests live next to source: foo.ts -> foo.test.ts, foo.go -> foo_test.go
+No god files: utils.ts, helpers.ts, common.ts -- name things specifically
+Conventional Commits: feat(scope): description
+Never skip hooks with --no-verify -- fix the underlying issue
+Read before writing. Understand context before editing.
+Use targeted searches before reading entire files
+Small focused changes. One concern per commit. One concern per PR.
+Mock at boundaries only: HTTP, DB, third-party APIs. Never mock internals.
+Update SESSION_LOG.md after meaningful work -- future you will thank you
+Run /sync-docs after locked decisions to keep docs consistent
+{{#ifMultiTenancy config}}
+Every tenant-scoped query MUST filter by tenant_id. No exceptions.
+{{/ifMultiTenancy}}
+{{#ifHasStack config "next-ssr"}}
+Default to Server Components. Only add "use client" when you need interactivity.
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+context.Context is always the first parameter. Errors are always wrapped with context.
+{{/ifHasStack}}
+Derive state during render -- never useEffect to sync state between variables
+Use /plan-review to challenge your plan before writing code
+Use /adr to document decisions you will forget in 3 months

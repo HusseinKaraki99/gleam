@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+.nuxt/
+.output/
+
+# Test & coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Nx
+.nx/
+
+# TypeScript
+*.tsbuildinfo
+
+# Debug
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+{{#if config.needsGoWork}}
+
+# Go
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+{{/if}}
+{{#ifIncludes config.allStackIds "dotnet"}}
+
+# .NET
+*.user
+*.suo
+*.userprefs
+*.ncrunchproject
+*.ncrunchsolution
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+.dotnet/
+{{/ifIncludes}}
+{{#ifIncludes config.allStackIds "expo"}}
+
+# Expo / React Native
+.expo/
+ios/
+android/
+{{/ifIncludes}}
+
+# Generated
+generated/
+*.gen.ts
+*.generated.ts

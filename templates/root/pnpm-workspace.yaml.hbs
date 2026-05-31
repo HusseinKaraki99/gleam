@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+{{#ifEquals config.database.type "postgres"}}
+  - "db"
+{{/ifEquals}}

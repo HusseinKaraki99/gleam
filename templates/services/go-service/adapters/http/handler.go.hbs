@@ -1,0 +1,40 @@
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog"
+
+	"{{config.org}}/services/{{name}}/usecase"
+)
+
+type Handler struct {
+	useCase *usecase.UseCase
+	logger  zerolog.Logger
+}
+
+func NewHandler(uc *usecase.UseCase, logger zerolog.Logger) *Handler {
+	return &Handler{
+		useCase: uc,
+		logger:  logger.With().Str("component", "http").Logger(),
+	}
+}
+
+func (h *Handler) RegisterRoutes(r chi.Router) {
+	r.Get("/health", h.health)
+}
+
+func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
+	if err := h.useCase.HealthCheck(r.Context()); err != nil {
+		h.logger.Error().Err(err).Msg("health check failed")
+		http.Error(w, "unhealthy", http.StatusServiceUnavailable)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "ok",
+	})
+}

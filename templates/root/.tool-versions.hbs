@@ -1,0 +1,8 @@
+nodejs 22.12.0
+pnpm 9.15.0
+{{#if config.needsGoWork}}
+golang 1.24.3
+{{/if}}
+{{#ifIncludes config.allStackIds "dotnet"}}
+dotnet 9.0.301
+{{/ifIncludes}}

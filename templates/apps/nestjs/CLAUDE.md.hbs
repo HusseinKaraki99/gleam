@@ -1,0 +1,35 @@
+# {{name}} — NestJS Backend
+
+This is the **{{name}}** backend service built with NestJS.
+
+## Structure
+
+```
+src/
+├── main.ts                    # Application entry point
+├── app.module.ts              # Root module
+├── config/                    # Configuration
+│   └── env.config.ts          # Type-safe env parsing
+├── common/                    # Cross-cutting concerns
+│   ├── guards/                # Auth guards
+│   ├── interceptors/          # Response transformation
+│   ├── decorators/            # Custom decorators
+│   └── filters/               # Exception filters
+├── health/                    # Health check module
+└── modules/                   # Feature modules
+    └── <module>/
+        ├── <module>.module.ts
+        ├── <module>.controller.ts
+        ├── <module>.service.ts
+        ├── dto/               # Data Transfer Objects
+        ├── entities/          # Database entities
+        └── <module>.spec.ts   # Tests
+```
+
+## Rules
+
+- One module per domain concept
+- DTOs separate from entities
+- Services contain business logic, controllers handle HTTP
+- Max 250 lines per file
+- Tests co-located with implementation

@@ -1,0 +1,54 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - typecheck
+    - gofmt
+    - goimports
+    - misspell
+    - unconvert
+    - depguard
+    - revive
+
+linters-settings:
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "io/ioutil"
+            desc: "Deprecated: use io and os packages instead"
+          - pkg: "github.com/pkg/errors"
+            desc: "Use fmt.Errorf with %w instead"
+
+  revive:
+    rules:
+      - name: exported
+      - name: var-naming
+      - name: blank-imports
+      - name: context-as-argument
+      - name: error-return
+      - name: error-naming
+      - name: increment-decrement
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+
+  goimports:
+    local-prefixes: github.com/{{config.org}}
+
+issues:
+  exclude-dirs:
+    - vendor
+    - node_modules
+  max-issues-per-linter: 50
+  max-same-issues: 10

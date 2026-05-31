@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gleam - AI-Agent-Driven Engineering Template System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-deep: #0a0a0f;
+  --bg-card: rgba(255,255,255,0.03);
+  --bg-card-hover: rgba(255,255,255,0.06);
+  --bg-glass: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-primary: #e8e8ed;
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-1: #2dd4bf;
+  --accent-2: #06b6d4;
+  --accent-3: #0ea5e9;
+  --accent-gradient: linear-gradient(135deg, #2dd4bf, #06b6d4, #0ea5e9);
+  --accent-gradient-text: linear-gradient(135deg, #5eead4, #22d3ee, #38bdf8);
+  --accent-glow: rgba(6,182,212,0.15);
+  --accent-glow-strong: rgba(6,182,212,0.3);
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --section-padding: clamp(60px, 10vh, 120px) clamp(20px, 5vw, 80px);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   BACKGROUND EFFECTS
+   ============================================================ */
+.bg-mesh {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-mesh::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse 600px 600px at 20% 20%, rgba(6,182,212,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 800px 800px at 80% 10%, rgba(45,212,191,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 600px at 60% 80%, rgba(14,165,233,0.05) 0%, transparent 70%);
+  animation: meshFloat 30s ease-in-out infinite;
+}
+
+@keyframes meshFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2%, -1%) rotate(0.5deg); }
+  50% { transform: translate(-1%, 2%) rotate(-0.5deg); }
+  75% { transform: translate(1%, -2%) rotate(0.3deg); }
+}
+
+/* Noise grain overlay */
+.bg-noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px clamp(20px, 5vw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10,10,15,0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+
+nav .logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+nav .nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+nav .nav-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s;
+  letter-spacing: -0.01em;
+}
+
+nav .nav-links a:hover {
+  color: var(--text-primary);
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* ============================================================
+   SECTIONS (Common)
+   ============================================================ */
+section {
+  position: relative;
+  z-index: 1;
+  scroll-snap-align: start;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--section-padding);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+section.full-width {
+  max-width: none;
+}
+
+.section-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.section-subtitle {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: var(--text-secondary);
+  max-width: 640px;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* ============================================================
+   REVEAL ANIMATIONS
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+.reveal-delay-6 { transition-delay: 0.6s; }
+.reveal-delay-7 { transition-delay: 0.7s; }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-top: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-graphic {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: ringPulse 6s ease-in-out infinite;
+}
+
+.hero-ring:nth-child(1) {
+  width: 300px; height: 300px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-color: rgba(45,212,191,0.15);
+  animation-delay: 0s;
+}
+
+.hero-ring:nth-child(2) {
+  width: 450px; height: 450px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-color: rgba(6,182,212,0.1);
+  animation-delay: 1s;
+}
+
+.hero-ring:nth-child(3) {
+  width: 600px; height: 600px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-color: rgba(14,165,233,0.06);
+  animation-delay: 2s;
+}
+
+.hero-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  animation: dotOrbit 12s linear infinite;
+}
+
+.hero-dot:nth-child(4) {
+  top: 50%; left: 50%;
+  transform-origin: 150px 0;
+  animation-duration: 10s;
+  box-shadow: 0 0 10px var(--accent-2);
+}
+
+.hero-dot:nth-child(5) {
+  top: 50%; left: 50%;
+  transform-origin: -225px 0;
+  animation-duration: 15s;
+  animation-direction: reverse;
+  background: var(--accent-1);
+  box-shadow: 0 0 10px var(--accent-1);
+}
+
+.hero-dot:nth-child(6) {
+  top: 50%; left: 50%;
+  transform-origin: 0 300px;
+  animation-duration: 20s;
+  background: var(--accent-3);
+  box-shadow: 0 0 10px var(--accent-3);
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.03); }
+}
+
+@keyframes dotOrbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 8px;
+  border-radius: 100px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  backdrop-filter: blur(10px);
+}
+
+.hero-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(45,212,191,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(45,212,191,0); }
+}
+
+.hero h1 {
+  font-size: clamp(4rem, 12vw, 9rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+  margin-bottom: 24px;
+  background: var(--accent-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 60px rgba(6,182,212,0.2));
+}
+
+.hero .tagline {
+  font-family: var(--font-mono);
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  color: var(--accent-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.hero .subtitle {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 100px;
+  background: var(--accent-gradient);
+  color: #0a0a0f;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 30px rgba(6,182,212,0.2);
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 50px rgba(6,182,212,0.3);
+}
+
+.hero-cta svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s;
+}
+
+.hero-cta:hover svg {
+  transform: translateX(3px);
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+.scroll-indicator .line {
+  width: 1px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--accent-2), transparent);
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ============================================================
+   STAT GRID
+   ============================================================ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px 20px;
+  text-align: center;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.stat-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.stat-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--accent-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   LIFECYCLE TIMELINE
+   ============================================================ */
+.lifecycle-container {
+  margin-top: 48px;
+  position: relative;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2), var(--accent-3));
+  opacity: 0.3;
+  border-radius: 1px;
+}
+
+.phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+.phase-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+  border: 2px solid var(--accent-2);
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s;
+  box-shadow: 0 0 0 4px var(--bg-deep);
+}
+
+.phase:hover .phase-dot,
+.phase.active .phase-dot {
+  background: var(--accent-2);
+  box-shadow: 0 0 0 4px var(--bg-deep), 0 0 20px var(--accent-glow-strong);
+}
+
+.phase-number {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-2);
+  opacity: 0.6;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.phase-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.phase-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.phase-skill-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-1);
+  background: rgba(45,212,191,0.08);
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.phase-detail {
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+
+.phase:hover .phase-detail,
+.phase.active .phase-detail {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 12px;
+}
+
+/* ============================================================
+   STACK CARDS
+   ============================================================ */
+.stacks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.stack-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stack-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stack-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.stack-card:hover::before {
+  opacity: 1;
+}
+
+.stack-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  display: block;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,182,212,0.08);
+  border-radius: var(--radius-sm);
+}
+
+.stack-category {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.stack-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.stack-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.stack-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.stack-feature {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.04);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* ============================================================
+   INTEGRATION LAYERS
+   ============================================================ */
+.layers-container {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layer {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.layer:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.layer:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+.layer:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.layer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.layer:hover::before {
+  opacity: 1;
+}
+
+.layer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  background: rgba(6,182,212,0.08);
+  border: 1px solid rgba(6,182,212,0.15);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: center;
+}
+
+.layer-content h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.layer-content p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.layer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.layer-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-1);
+  background: rgba(45,212,191,0.06);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   DESIGN SYSTEM
+   ============================================================ */
+.design-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.design-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  transition: all 0.35s;
+  position: relative;
+}
+
+.design-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.design-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: rgba(6,182,212,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.design-card h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+
+.design-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.design-card ul {
+  list-style: none;
+  margin-top: 14px;
+}
+
+.design-card ul li {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 5px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.design-card ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  opacity: 0.5;
+}
+
+/* Token flow visualization */
+.token-flow {
+  margin-top: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.flow-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 28px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.flow-node h5 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.flow-node p {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.flow-arrow {
+  font-size: 1.2rem;
+  color: var(--accent-2);
+  padding: 0 12px;
+  opacity: 0.5;
+}
+
+/* ============================================================
+   FEEDBACK LOOP
+   ============================================================ */
+.feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.feedback-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.feedback-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(6,182,212,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.feedback-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.feedback-card p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.feedback-arrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-2);
+  opacity: 0.5;
+}
+
+/* Feedback loop diagram */
+.loop-visual {
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.loop-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 10px 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.loop-step .num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-2);
+  background: rgba(6,182,212,0.1);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loop-connector {
+  color: var(--accent-2);
+  opacity: 0.4;
+  font-size: 1rem;
+}
+
+/* ============================================================
+   PRESET CARDS
+   ============================================================ */
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.preset-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.preset-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.preset-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.preset-card:hover::after {
+  opacity: 1;
+}
+
+.preset-number {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-2);
+  opacity: 0.5;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.preset-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.preset-stacks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.preset-stack {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--accent-1);
+  background: rgba(45,212,191,0.08);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(45,212,191,0.1);
+}
+
+.preset-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.preset-meta span {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.preset-features {
+  list-style: none;
+}
+
+.preset-features li {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.preset-features li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  opacity: 0.4;
+}
+
+/* ============================================================
+   GETTING STARTED STEPS
+   ============================================================ */
+.steps-container {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding: 28px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.step:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.step:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+.step:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: rgba(6,182,212,0.08);
+  border: 1px solid rgba(6,182,212,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent-2);
+}
+
+.step h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.step p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.step code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent-1);
+  background: rgba(45,212,191,0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 60px clamp(20px, 5vw, 80px) 40px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.footer-badge svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-2);
+}
+
+footer .version {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+footer .footer-tagline {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+.section-divider {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .timeline {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .timeline::before {
+    display: none;
+  }
+
+  .phase-dot {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  nav .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(20px);
+    flex-direction: column;
+    padding: 20px;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  nav .nav-links.open {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+
+  .timeline {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .phase {
+    flex-direction: row;
+    text-align: left;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+  }
+
+  .phase-dot {
+    display: block;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    box-shadow: none;
+  }
+
+  .phase-detail {
+    max-height: none;
+    opacity: 1;
+  }
+
+  .stacks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .design-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .layer {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .token-flow {
+    flex-direction: column;
+  }
+
+  .flow-arrow {
+    transform: rotate(90deg);
+  }
+
+  .presets-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .loop-visual {
+    flex-direction: column;
+  }
+
+  .loop-connector {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero h1 {
+    font-size: 3.5rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Background effects -->
+<div class="bg-mesh"></div>
+<div class="bg-noise"></div>
+
+<!-- Navigation -->
+<nav>
+  <div class="logo">Gleam</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#what">Overview</a></li>
+    <li><a href="#lifecycle">Lifecycle</a></li>
+    <li><a href="#stacks">Stacks</a></li>
+    <li><a href="#integration">Integration</a></li>
+    <li><a href="#design">Design System</a></li>
+    <li><a href="#presets">Presets</a></li>
+    <li><a href="#start">Get Started</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="hero full-width" id="hero">
+  <div class="hero-graphic" aria-hidden="true">
+    <div class="hero-ring"></div>
+    <div class="hero-ring"></div>
+    <div class="hero-ring"></div>
+    <div class="hero-dot"></div>
+    <div class="hero-dot"></div>
+    <div class="hero-dot"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge reveal">
+      <span class="dot"></span>
+      v0.1.0 &mdash; Template System
+    </div>
+
+    <h1 class="reveal reveal-delay-1">Gleam</h1>
+
+    <p class="tagline reveal reveal-delay-2">AI-Agent-Driven Engineering Template System</p>
+
+    <p class="subtitle reveal reveal-delay-3">
+      Build anything from startups to enterprise systems &mdash; with AI&nbsp;agents productive from day one.
+    </p>
+
+    <a href="#what" class="hero-cta reveal reveal-delay-4">
+      Explore the system
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="line"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 1: WHAT IS GLEAM
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="what">
+  <span class="section-label reveal">01 &mdash; Overview</span>
+  <h2 class="section-title reveal reveal-delay-1">What is Gleam?</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    A meta-template system that generates production-ready monorepos pre-configured for Claude&nbsp;Code.
+    It codifies proven patterns from real production projects into a reusable generator &mdash;
+    accessed entirely via a <code style="font-family:var(--font-mono);color:var(--accent-1);background:rgba(45,212,191,0.08);padding:2px 8px;border-radius:4px;font-size:0.9em;">/init-project</code> skill.
+  </p>
+
+  <div class="stats-grid">
+    <div class="stat-card reveal reveal-delay-1">
+      <div class="stat-number" data-target="153">0</div>
+      <div class="stat-label">Template Files</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-2">
+      <div class="stat-number" data-target="11000" data-suffix="+">0</div>
+      <div class="stat-label">Lines of Config</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-3">
+      <div class="stat-number" data-target="9">0</div>
+      <div class="stat-label">Stack Modules</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-4">
+      <div class="stat-number" data-target="17">0</div>
+      <div class="stat-label">Skills</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-5">
+      <div class="stat-number" data-target="11">0</div>
+      <div class="stat-label">Agents</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-6">
+      <div class="stat-number" data-target="8">0</div>
+      <div class="stat-label">Rules</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-7">
+      <div class="stat-number" data-target="5">0</div>
+      <div class="stat-label">Phase Gates</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-7">
+      <div class="stat-number" data-target="4">0</div>
+      <div class="stat-label">Presets</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 2: LIFECYCLE
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="lifecycle">
+  <span class="section-label reveal">02 &mdash; Lifecycle</span>
+  <h2 class="section-title reveal reveal-delay-1">The 6-Phase Lifecycle</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    Every project follows a structured lifecycle, from initial discovery to deployment. Each phase has dedicated skills, quality gates, and AI-powered automation.
+  </p>
+
+  <div class="lifecycle-container reveal reveal-delay-3">
+    <div class="timeline">
+      <div class="phase" data-phase="1">
+        <div class="phase-dot"></div>
+        <div class="phase-number">01</div>
+        <div class="phase-name">Discovery</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/discover</span>
+          <span class="phase-skill-tag">/research</span>
+        </div>
+        <div class="phase-detail">Guided requirements gathering + competitive landscape analysis. Builds the foundation for everything that follows.</div>
+      </div>
+      <div class="phase" data-phase="2">
+        <div class="phase-dot"></div>
+        <div class="phase-number">02</div>
+        <div class="phase-name">Specification</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/spec</span>
+          <span class="phase-skill-tag">/plan-feature</span>
+        </div>
+        <div class="phase-detail">Transform requirements into detailed feature specs and task breakdowns ready for development.</div>
+      </div>
+      <div class="phase" data-phase="3">
+        <div class="phase-dot"></div>
+        <div class="phase-number">03</div>
+        <div class="phase-name">Architecture</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/adr</span>
+          <span class="phase-skill-tag">/plan-review</span>
+        </div>
+        <div class="phase-detail">Architecture Decision Records + validation. Ensures technical decisions are documented and reviewed.</div>
+      </div>
+      <div class="phase" data-phase="4">
+        <div class="phase-dot"></div>
+        <div class="phase-number">04</div>
+        <div class="phase-name">Development</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/new-feature</span>
+          <span class="phase-skill-tag">/commit</span>
+          <span class="phase-skill-tag">/iterate</span>
+        </div>
+        <div class="phase-detail">Scaffolding, coding, and design iteration with AI-assisted development and visual design alternatives.</div>
+      </div>
+      <div class="phase" data-phase="5">
+        <div class="phase-dot"></div>
+        <div class="phase-number">05</div>
+        <div class="phase-name">Review</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/self-review</span>
+          <span class="phase-skill-tag">/design-review</span>
+          <span class="phase-skill-tag">/figma-sync</span>
+        </div>
+        <div class="phase-detail">Multi-layered quality gates: code review, design review, and Figma synchronization checks.</div>
+      </div>
+      <div class="phase" data-phase="6">
+        <div class="phase-dot"></div>
+        <div class="phase-number">06</div>
+        <div class="phase-name">Deployment</div>
+        <div class="phase-skills">
+          <span class="phase-skill-tag">/deploy</span>
+          <span class="phase-skill-tag">/sync-docs</span>
+        </div>
+        <div class="phase-detail">Release management + documentation sync. Keeps docs, status boards, and session logs up to date.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 3: STACKS
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="stacks">
+  <span class="section-label reveal">03 &mdash; Stack Support</span>
+  <h2 class="section-title reveal reveal-delay-1">9 Composable Stack Modules</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    Pick the stacks you need. The composer merges them into a coherent monorepo with shared types, consistent tooling, and integrated CI/CD.
+  </p>
+
+  <div class="stacks-grid">
+    <!-- Frontend -->
+    <div class="stack-card reveal reveal-delay-1">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="stack-category">Frontend</div>
+      <div class="stack-name">Next.js</div>
+      <div class="stack-desc">Server-side rendered React with App Router, API routes, and optimized image handling.</div>
+      <div class="stack-features">
+        <span class="stack-feature">SSR</span>
+        <span class="stack-feature">App Router</span>
+        <span class="stack-feature">Tailwind</span>
+        <span class="stack-feature">React 19</span>
+      </div>
+    </div>
+
+    <div class="stack-card reveal reveal-delay-2">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><path d="M8 12l4-8 4 8"/><path d="M6 16h12"/>
+        </svg>
+      </div>
+      <div class="stack-category">Frontend</div>
+      <div class="stack-name">Vite + React</div>
+      <div class="stack-desc">Lightning-fast SPA with hot module replacement, optimized builds, and React 19.</div>
+      <div class="stack-features">
+        <span class="stack-feature">SPA</span>
+        <span class="stack-feature">HMR</span>
+        <span class="stack-feature">Tailwind</span>
+        <span class="stack-feature">Vitest</span>
+      </div>
+    </div>
+
+    <!-- Backend -->
+    <div class="stack-card reveal reveal-delay-3">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 3v18"/><path d="M3 9h18"/>
+        </svg>
+      </div>
+      <div class="stack-category">Backend</div>
+      <div class="stack-name">NestJS</div>
+      <div class="stack-desc">Enterprise Node.js framework with modular architecture, DI, and decorator-based routing.</div>
+      <div class="stack-features">
+        <span class="stack-feature">TypeScript</span>
+        <span class="stack-feature">DI Container</span>
+        <span class="stack-feature">Guards</span>
+        <span class="stack-feature">Pipes</span>
+      </div>
+    </div>
+
+    <div class="stack-card reveal reveal-delay-4">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 4h16v16H4z"/><path d="M4 12h16"/><path d="M12 4v16"/>
+        </svg>
+      </div>
+      <div class="stack-category">Backend</div>
+      <div class="stack-name">Go (Hexagonal)</div>
+      <div class="stack-desc">Clean architecture Go services with ports &amp; adapters, domain-driven design, and zero-alloc routing.</div>
+      <div class="stack-features">
+        <span class="stack-feature">Ports/Adapters</span>
+        <span class="stack-feature">DDD</span>
+        <span class="stack-feature">stdlib http</span>
+        <span class="stack-feature">golangci-lint</span>
+      </div>
+    </div>
+
+    <div class="stack-card reveal reveal-delay-5">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <div class="stack-category">Backend</div>
+      <div class="stack-name">ASP.NET Core</div>
+      <div class="stack-desc">High-performance C# web API with minimal APIs, EF Core, and vertical slice architecture.</div>
+      <div class="stack-features">
+        <span class="stack-feature">C#</span>
+        <span class="stack-feature">Minimal API</span>
+        <span class="stack-feature">EF Core</span>
+        <span class="stack-feature">Vertical Slice</span>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div class="stack-card reveal reveal-delay-6">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/>
+        </svg>
+      </div>
+      <div class="stack-category">Mobile</div>
+      <div class="stack-name">Expo (React Native)</div>
+      <div class="stack-desc">Cross-platform mobile with shared UI package, Expo Router, and over-the-air updates.</div>
+      <div class="stack-features">
+        <span class="stack-feature">iOS + Android</span>
+        <span class="stack-feature">Expo Router</span>
+        <span class="stack-feature">OTA Updates</span>
+        <span class="stack-feature">Shared Types</span>
+      </div>
+    </div>
+
+    <!-- Database -->
+    <div class="stack-card reveal reveal-delay-1">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <div class="stack-category">Database</div>
+      <div class="stack-name">Drizzle ORM</div>
+      <div class="stack-desc">Type-safe SQL with zero overhead. Schema-first migrations and seeding for PostgreSQL.</div>
+      <div class="stack-features">
+        <span class="stack-feature">TypeScript</span>
+        <span class="stack-feature">Migrations</span>
+        <span class="stack-feature">Seeding</span>
+        <span class="stack-feature">PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="stack-card reveal reveal-delay-2">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <div class="stack-category">Database</div>
+      <div class="stack-name">sqlc</div>
+      <div class="stack-desc">Compile SQL to type-safe Go code. Write queries in SQL, get generated Go structs and methods.</div>
+      <div class="stack-features">
+        <span class="stack-feature">Go</span>
+        <span class="stack-feature">Code Gen</span>
+        <span class="stack-feature">SQL-first</span>
+        <span class="stack-feature">PostgreSQL</span>
+      </div>
+    </div>
+
+    <div class="stack-card reveal reveal-delay-3">
+      <div class="stack-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <div class="stack-category">Database</div>
+      <div class="stack-name">EF Core</div>
+      <div class="stack-desc">Entity Framework Core for ASP.NET. Code-first migrations, LINQ queries, and entity tracking.</div>
+      <div class="stack-features">
+        <span class="stack-feature">C#</span>
+        <span class="stack-feature">Code-First</span>
+        <span class="stack-feature">LINQ</span>
+        <span class="stack-feature">PostgreSQL</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4: INTEGRATION LAYER
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="integration">
+  <span class="section-label reveal">04 &mdash; Claude Code Integration</span>
+  <h2 class="section-title reveal reveal-delay-1">The Integration Layer</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    Six layers of AI integration that make Claude Code a full team member &mdash; not just a code completion tool.
+  </p>
+
+  <div class="layers-container">
+    <div class="layer reveal reveal-delay-1">
+      <div class="layer-badge">L1 &bull; Constitution</div>
+      <div class="layer-content">
+        <h4>CLAUDE.md</h4>
+        <p>214-line project constitution auto-loaded every session. Defines immutable rules: file sizes, naming, module boundaries, commit standards, and workflow protocols.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">auto-loaded</span>
+          <span class="layer-tag">cross-cutting</span>
+          <span class="layer-tag">always active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer reveal reveal-delay-2">
+      <div class="layer-badge">L2 &bull; Rules</div>
+      <div class="layer-content">
+        <h4>8 Path-Scoped Rules</h4>
+        <p>Context-aware rules that auto-load when editing matching files. Each rule encodes stack-specific patterns, conventions, and anti-patterns.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">frontend</span>
+          <span class="layer-tag">backend-go</span>
+          <span class="layer-tag">backend-node</span>
+          <span class="layer-tag">backend-dotnet</span>
+          <span class="layer-tag">database</span>
+          <span class="layer-tag">testing</span>
+          <span class="layer-tag">mobile</span>
+          <span class="layer-tag">design-system</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer reveal reveal-delay-3">
+      <div class="layer-badge">L3 &bull; Agents</div>
+      <div class="layer-content">
+        <h4>11 Specialist Agents</h4>
+        <p>Purpose-built agents with specific expertise, tools, and instructions. Each agent has a defined role, scope, and set of capabilities.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">architect</span>
+          <span class="layer-tag">code-reviewer</span>
+          <span class="layer-tag">security-auditor</span>
+          <span class="layer-tag">test-writer</span>
+          <span class="layer-tag">performance-analyst</span>
+          <span class="layer-tag">refactoring-specialist</span>
+          <span class="layer-tag">react-architect</span>
+          <span class="layer-tag">go-expert</span>
+          <span class="layer-tag">design-reviewer</span>
+          <span class="layer-tag">phase-gate</span>
+          <span class="layer-tag">product-analyst</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer reveal reveal-delay-4">
+      <div class="layer-badge">L4 &bull; Skills</div>
+      <div class="layer-content">
+        <h4>17 Lifecycle Skills</h4>
+        <p>Structured workflows invoked via slash commands. Each skill guides Claude through a multi-step process with defined inputs, validation, and outputs.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">/discover</span>
+          <span class="layer-tag">/research</span>
+          <span class="layer-tag">/spec</span>
+          <span class="layer-tag">/plan-feature</span>
+          <span class="layer-tag">/adr</span>
+          <span class="layer-tag">/plan-review</span>
+          <span class="layer-tag">/new-feature</span>
+          <span class="layer-tag">/commit</span>
+          <span class="layer-tag">/iterate</span>
+          <span class="layer-tag">/self-review</span>
+          <span class="layer-tag">/design-review</span>
+          <span class="layer-tag">/figma-sync</span>
+          <span class="layer-tag">/figma-implement</span>
+          <span class="layer-tag">/deploy</span>
+          <span class="layer-tag">/sync-docs</span>
+          <span class="layer-tag">/local-setup</span>
+          <span class="layer-tag">/start-session</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer reveal reveal-delay-5">
+      <div class="layer-badge">L5 &bull; Hooks</div>
+      <div class="layer-content">
+        <h4>3 Automated Behaviors</h4>
+        <p>Event-driven hooks that run automatically. Format code on every edit, block dangerous shell commands, and maintain session context.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">format-on-edit</span>
+          <span class="layer-tag">block-dangerous-bash</span>
+          <span class="layer-tag">session-context</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer reveal reveal-delay-6">
+      <div class="layer-badge">L6 &bull; Integration</div>
+      <div class="layer-content">
+        <h4>External Tool Integration</h4>
+        <p>MCP servers and tool connections that extend Claude Code's reach into design tools, databases, browsers, and version control.</p>
+        <div class="layer-tags">
+          <span class="layer-tag">Figma MCP</span>
+          <span class="layer-tag">GitHub</span>
+          <span class="layer-tag">Playwright</span>
+          <span class="layer-tag">Postgres MCP</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 5: DESIGN SYSTEM
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="design">
+  <span class="section-label reveal">05 &mdash; Agentic Design System</span>
+  <h2 class="section-title reveal reveal-delay-1">Design That AI Understands</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    Every component ships with machine-readable metadata. AI agents don't just write code &mdash; they understand and enforce design decisions.
+  </p>
+
+  <div class="design-grid">
+    <div class="design-card reveal reveal-delay-1">
+      <div class="design-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-7.07l-2.83 2.83M9.76 14.24l-2.83 2.83m11.14 0l-2.83-2.83M9.76 9.76L6.93 6.93"/>
+        </svg>
+      </div>
+      <h4>Design Tokens</h4>
+      <p>OKLCH color system generated from a single brand hue. Typography (Inter + JetBrains Mono), 4px spacing grid, motion tokens, and personality-driven border radii.</p>
+      <ul>
+        <li>OKLCH colors from brand hue</li>
+        <li>Semantic token layers</li>
+        <li>CSS custom properties</li>
+        <li>Motion levels (subtle/moderate/expressive)</li>
+      </ul>
+    </div>
+
+    <div class="design-card reveal reveal-delay-2">
+      <div class="design-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+        </svg>
+      </div>
+      <h4>UI Components</h4>
+      <p>Button, Card, Input, Badge &mdash; each with ComponentMeta: machine-readable metadata that describes variants, states, and relationships for AI agents.</p>
+      <ul>
+        <li>ComponentMeta per component</li>
+        <li>Variant + state matrices</li>
+        <li>Accessibility built in</li>
+        <li>AI-readable documentation</li>
+      </ul>
+    </div>
+
+    <div class="design-card reveal reveal-delay-3">
+      <div class="design-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h4>Figma Integration</h4>
+      <p>Bidirectional sync via MCP. Push components to Figma, pull design updates back to code. Code Connect maps ensure parity.</p>
+      <ul>
+        <li>Design-to-code via MCP</li>
+        <li>Code-to-design sync</li>
+        <li>Code Connect mappings</li>
+        <li>Variable/token sync</li>
+      </ul>
+    </div>
+
+    <div class="design-card reveal reveal-delay-4">
+      <div class="design-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <h4>Design Governance</h4>
+      <p>Automated quality gates for design consistency. The design-reviewer agent, <code style="font-family:var(--font-mono);color:var(--accent-1);font-size:0.8em;">/design-review</code> skill, and design-system rules work together.</p>
+      <ul>
+        <li>/design-review skill</li>
+        <li>design-reviewer agent</li>
+        <li>design-system rule</li>
+        <li>Token compliance checks</li>
+      </ul>
+    </div>
+
+    <div class="design-card reveal reveal-delay-5">
+      <div class="design-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <h4>Brand Questionnaire</h4>
+      <p>During project init, answer a few questions about your brand identity. Gleam generates a complete, consistent design system from your answers.</p>
+      <ul>
+        <li>Primary hue (0&ndash;360)</li>
+        <li>Personality: professional/playful/minimal/bold</li>
+        <li>Motion level preference</li>
+        <li>Typography override options</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="token-flow reveal reveal-delay-3">
+    <div class="flow-node">
+      <h5>Brand Hue</h5>
+      <p>Single OKLCH value</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-node">
+      <h5>Design Tokens</h5>
+      <p>Colors, spacing, motion</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-node">
+      <h5>Components</h5>
+      <p>Button, Card, Input...</p>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-node">
+      <h5>Figma Library</h5>
+      <p>Synced via MCP</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6: FEEDBACK & LEARNING
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="feedback">
+  <span class="section-label reveal">06 &mdash; Learning System</span>
+  <h2 class="section-title reveal reveal-delay-1">Feedback &amp; Learning</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    The system improves with every interaction. Corrections, preferences, and validated patterns are captured and reused across sessions.
+  </p>
+
+  <div class="feedback-grid">
+    <div class="feedback-card reveal reveal-delay-1">
+      <div class="feedback-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </div>
+      <h4>Corrections</h4>
+      <p>When you correct Claude, the correction is saved to memory immediately and applied to all future sessions.</p>
+      <span class="feedback-arrow">&rarr; memory</span>
+    </div>
+
+    <div class="feedback-card reveal reveal-delay-2">
+      <div class="feedback-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <h4>Design Preferences</h4>
+      <p>The <code style="font-family:var(--font-mono);color:var(--accent-1);font-size:0.8em;">/iterate</code> skill presents visual alternatives. Your choices are saved and inform future design decisions.</p>
+      <span class="feedback-arrow">&rarr; memory + tokens</span>
+    </div>
+
+    <div class="feedback-card reveal reveal-delay-3">
+      <div class="feedback-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+        </svg>
+      </div>
+      <h4>Bug Patterns</h4>
+      <p>Bugs are saved to memory, a regression test is generated, and rules are updated to prevent recurrence.</p>
+      <span class="feedback-arrow">&rarr; memory + test + rule</span>
+    </div>
+
+    <div class="feedback-card reveal reveal-delay-4">
+      <div class="feedback-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
+        </svg>
+      </div>
+      <h4>Positive Patterns</h4>
+      <p>When you approve an approach, it's saved as a validated pattern and reused across similar contexts.</p>
+      <span class="feedback-arrow">&rarr; validated approach</span>
+    </div>
+  </div>
+
+  <div class="loop-visual reveal reveal-delay-3">
+    <div class="loop-step"><span class="num">1</span> Action</div>
+    <span class="loop-connector">&rarr;</span>
+    <div class="loop-step"><span class="num">2</span> Feedback</div>
+    <span class="loop-connector">&rarr;</span>
+    <div class="loop-step"><span class="num">3</span> Memory</div>
+    <span class="loop-connector">&rarr;</span>
+    <div class="loop-step"><span class="num">4</span> Apply</div>
+    <span class="loop-connector">&rarr;</span>
+    <div class="loop-step"><span class="num">5</span> Improve</div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 7: PRESETS
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="presets">
+  <span class="section-label reveal">07 &mdash; Presets</span>
+  <h2 class="section-title reveal reveal-delay-1">4 Ready-Made Presets</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    Start with a proven stack combination. Each preset is a curated set of modules tuned for a specific team size and use case.
+  </p>
+
+  <div class="presets-grid">
+    <div class="preset-card reveal reveal-delay-1">
+      <div class="preset-number">01</div>
+      <div class="preset-name">Solo SaaS</div>
+      <div class="preset-stacks">
+        <span class="preset-stack">Next.js</span>
+        <span class="preset-stack">NestJS</span>
+        <span class="preset-stack">Drizzle</span>
+        <span class="preset-stack">Clerk</span>
+      </div>
+      <div class="preset-meta">
+        <span>1&ndash;2 developers</span>
+        <span>SaaS / B2C</span>
+      </div>
+      <ul class="preset-features">
+        <li>Full-stack TypeScript</li>
+        <li>Auth via Clerk</li>
+        <li>Type-safe database</li>
+        <li>Optimized for velocity</li>
+      </ul>
+    </div>
+
+    <div class="preset-card reveal reveal-delay-2">
+      <div class="preset-number">02</div>
+      <div class="preset-name">Team Platform</div>
+      <div class="preset-stacks">
+        <span class="preset-stack">Next.js</span>
+        <span class="preset-stack">Go</span>
+        <span class="preset-stack">sqlc</span>
+        <span class="preset-stack">Multi-tenancy</span>
+      </div>
+      <div class="preset-meta">
+        <span>3&ndash;8 developers</span>
+        <span>B2B Platform</span>
+      </div>
+      <ul class="preset-features">
+        <li>Go for performance-critical paths</li>
+        <li>Multi-tenant data isolation</li>
+        <li>SQL-first database layer</li>
+        <li>Horizontal scaling ready</li>
+      </ul>
+    </div>
+
+    <div class="preset-card reveal reveal-delay-3">
+      <div class="preset-number">03</div>
+      <div class="preset-name">Enterprise</div>
+      <div class="preset-stacks">
+        <span class="preset-stack">Next.js</span>
+        <span class="preset-stack">Go</span>
+        <span class="preset-stack">NestJS</span>
+        <span class="preset-stack">Expo</span>
+        <span class="preset-stack">i18n</span>
+      </div>
+      <div class="preset-meta">
+        <span>8+ developers</span>
+        <span>Enterprise / Multi-product</span>
+      </div>
+      <ul class="preset-features">
+        <li>Multi-service architecture</li>
+        <li>Mobile + web coverage</li>
+        <li>Multi-tenancy + i18n</li>
+        <li>Full governance layer</li>
+      </ul>
+    </div>
+
+    <div class="preset-card reveal reveal-delay-4">
+      <div class="preset-number">04</div>
+      <div class="preset-name">Fullstack Mobile</div>
+      <div class="preset-stacks">
+        <span class="preset-stack">Next.js</span>
+        <span class="preset-stack">NestJS</span>
+        <span class="preset-stack">Expo</span>
+      </div>
+      <div class="preset-meta">
+        <span>2&ndash;5 developers</span>
+        <span>Mobile-first product</span>
+      </div>
+      <ul class="preset-features">
+        <li>Shared TypeScript across all surfaces</li>
+        <li>Admin dashboard + mobile app</li>
+        <li>Unified API layer</li>
+        <li>Shared UI component package</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION 8: GETTING STARTED
+     ============================================================ -->
+<div class="section-divider"></div>
+<section id="start">
+  <span class="section-label reveal">08 &mdash; Getting Started</span>
+  <h2 class="section-title reveal reveal-delay-1">Up and Running in Minutes</h2>
+  <p class="section-subtitle reveal reveal-delay-2">
+    From template to production-ready project in six steps. No boilerplate, no configuration drift, no guesswork.
+  </p>
+
+  <div class="steps-container">
+    <div class="step reveal reveal-delay-1">
+      <div class="step-number">1</div>
+      <div>
+        <h4>Open the template in Claude Code</h4>
+        <p>Clone or open the Gleam template project in your Claude Code workspace.</p>
+      </div>
+    </div>
+
+    <div class="step reveal reveal-delay-2">
+      <div class="step-number">2</div>
+      <div>
+        <h4>Run the init skill</h4>
+        <p>Type <code>/init-project</code> to start the interactive setup &mdash; or <code>/init-project solo-saas</code> to use a preset.</p>
+      </div>
+    </div>
+
+    <div class="step reveal reveal-delay-3">
+      <div class="step-number">3</div>
+      <div>
+        <h4>Answer the questionnaire</h4>
+        <p>Project name, stack selection, brand identity (primary hue, personality, motion level). Takes about 2 minutes.</p>
+      </div>
+    </div>
+
+    <div class="step reveal reveal-delay-4">
+      <div class="step-number">4</div>
+      <div>
+        <h4>Gleam generates your project</h4>
+        <p>Full monorepo with Claude Code integration: CLAUDE.md, rules, agents, skills, hooks, design tokens, and CI/CD &mdash; all configured.</p>
+      </div>
+    </div>
+
+    <div class="step reveal reveal-delay-5">
+      <div class="step-number">5</div>
+      <div>
+        <h4>Start a session</h4>
+        <p>Open the generated project and run <code>/start-session</code>. Claude loads the constitution, reads project status, and is ready to work.</p>
+      </div>
+    </div>
+
+    <div class="step reveal reveal-delay-6">
+      <div class="step-number">6</div>
+      <div>
+        <h4>Begin product discovery</h4>
+        <p>Run <code>/discover</code> to start guided requirements gathering. The lifecycle begins.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="footer-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+    </svg>
+    Built with Claude Code
+  </div>
+  <div class="version">v0.1.0</div>
+  <div class="footer-tagline">Designed for teams that ship</div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+(function() {
+  'use strict';
+
+  // ─── Intersection Observer for reveal animations ───
+  const revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+  );
+
+  document.querySelectorAll('.reveal').forEach((el) => {
+    revealObserver.observe(el);
+  });
+
+  // ─── Animated counters ───
+  const counterObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          if (el.dataset.counted) return;
+          el.dataset.counted = 'true';
+
+          const target = parseInt(el.dataset.target, 10);
+          const suffix = el.dataset.suffix || '';
+          const duration = 1800;
+          const startTime = performance.now();
+
+          function easeOutExpo(t) {
+            return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+          }
+
+          function animate(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutExpo(progress);
+            const current = Math.round(easedProgress * target);
+
+            if (target >= 1000) {
+              el.textContent = current.toLocaleString() + suffix;
+            } else {
+              el.textContent = current + suffix;
+            }
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          }
+
+          requestAnimationFrame(animate);
+          counterObserver.unobserve(el);
+        }
+      });
+    },
+    { threshold: 0.5 }
+  );
+
+  document.querySelectorAll('.stat-number[data-target]').forEach((el) => {
+    counterObserver.observe(el);
+  });
+
+  // ─── Phase timeline interaction ───
+  document.querySelectorAll('.phase').forEach((phase) => {
+    phase.addEventListener('click', () => {
+      const isActive = phase.classList.contains('active');
+      document.querySelectorAll('.phase').forEach((p) => p.classList.remove('active'));
+      if (!isActive) {
+        phase.classList.add('active');
+      }
+    });
+  });
+
+  // ─── Mobile nav toggle ───
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+    });
+
+    navLinks.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+      });
+    });
+  }
+
+  // ─── Smooth scroll for anchor links ───
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(anchor.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ─── Nav background on scroll ───
+  const nav = document.querySelector('nav');
+  let lastScroll = 0;
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    if (scrollY > 100) {
+      nav.style.background = 'rgba(10,10,15,0.9)';
+    } else {
+      nav.style.background = 'rgba(10,10,15,0.7)';
+    }
+    lastScroll = scrollY;
+  }, { passive: true });
+
+  // ─── Active nav link highlighting ───
+  const sections = document.querySelectorAll('section[id]');
+  const navAnchors = document.querySelectorAll('nav .nav-links a');
+
+  const sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          navAnchors.forEach((a) => {
+            if (a.getAttribute('href') === '#' + id) {
+              a.style.color = 'var(--text-primary)';
+            } else {
+              a.style.color = '';
+            }
+          });
+        }
+      });
+    },
+    { threshold: 0.3 }
+  );
+
+  sections.forEach((section) => {
+    sectionObserver.observe(section);
+  });
+
+  // ─── Particle canvas (subtle) ───
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.3';
+  document.body.insertBefore(canvas, document.body.firstChild);
+
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let animFrame;
+  let w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function createParticles() {
+    particles = [];
+    const count = Math.min(Math.floor((w * h) / 25000), 60);
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        r: Math.random() * 1.2 + 0.3,
+        alpha: Math.random() * 0.3 + 0.05
+      });
+    }
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, w, h);
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(6, 182, 212, ' + p.alpha + ')';
+      ctx.fill();
+
+      // Draw connections
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const dx = p.x - p2.x;
+        const dy = p.y - p2.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = 'rgba(6, 182, 212, ' + (0.03 * (1 - dist / 150)) + ')';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    animFrame = requestAnimationFrame(drawParticles);
+  }
+
+  // Respect reduced-motion preference
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (!prefersReducedMotion.matches) {
+    resize();
+    createParticles();
+    drawParticles();
+
+    window.addEventListener('resize', () => {
+      resize();
+      createParticles();
+    });
+  }
+
+  prefersReducedMotion.addEventListener('change', (e) => {
+    if (e.matches) {
+      cancelAnimationFrame(animFrame);
+      ctx.clearRect(0, 0, w, h);
+    } else {
+      resize();
+      createParticles();
+      drawParticles();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

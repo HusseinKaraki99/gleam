@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+// PreToolUse hook — block dangerous Bash commands.
+// Wired in .claude/settings.json under hooks.PreToolUse for Bash.
+// Exits non-zero with stderr message to BLOCK the command. Exits 0 to allow.
+
+let payload = "";
+process.stdin.setEncoding("utf-8");
+process.stdin.on("data", (chunk) => (payload += chunk));
+process.stdin.on("end", () => {
+  let parsed;
+  try {
+    parsed = JSON.parse(payload || "{}");
+  } catch {
+    process.exit(0);
+  }
+
+  const command = parsed?.tool_input?.command;
+  if (!command || typeof command !== "string") {
+    process.exit(0);
+  }
+
+  const cmd = command.trim();
+  const cmdLower = cmd.toLowerCase();
+
+  // 1. rm -rf to root / home / current directory
+  if (
+    /\brm\s+-[a-z]*r[a-z]*f?[a-z]*\s+\/(\s|$)/.test(cmd) ||
+    /\brm\s+-[a-z]*r[a-z]*f?[a-z]*\s+~(\s|$|\/)/.test(cmd) ||
+    /\brm\s+-[a-z]*r[a-z]*f?[a-z]*\s+\$home(\s|$)/.test(cmdLower) ||
+    /\brm\s+-rf\s+(\.|\.\/|\.\.\/)/.test(cmd)
+  ) {
+    block("Refusing to run recursive rm against root / home / current directory.");
+  }
+
+  // 2. git push --force to protected branches
+  if (
+    /\bgit\s+push\s+(.*?--force|.*?-f\b)/.test(cmd) &&
+    /\b(dev|main|master|release|staging|production)\b/.test(cmd)
+  ) {
+    block("Refusing to force-push to a protected branch (dev/main/master/release/staging/production).");
+  }
+
+  // 3. git config writes
+  if (/\bgit\s+config\s/.test(cmd) && !/\bgit\s+config\s+(--get|--list|-l|--show)/.test(cmd)) {
+    block("Refusing to write to git config. Read-only git config operations are allowed.");
+  }
+
+  // 4. --no-verify on commit/push/merge/rebase
+  if (/\bgit\s+(commit|push|merge|rebase)\b.*--no-verify\b/.test(cmd)) {
+    block("Refusing to skip hooks with --no-verify. Fix the underlying issue instead.");
+  }
+
+  // 5. Destructive SQL against production
+  if (/\bpsql\s+.*(prod|production)/.test(cmdLower) && /\b(drop|truncate|delete)\b/.test(cmdLower)) {
+    block("Refusing to run destructive SQL against a production database.");
+  }
+
+  // 6. Writing to files outside the project (prevent escaping sandbox)
+  if (/\b(cat|tee|echo)\s+.*>+\s*\/(etc|usr|var|tmp|root|home)\b/.test(cmd)) {
+    block("Refusing to write to system directories outside the project.");
+  }
+
+  // 7. curl piped to sh/bash (supply chain risk)
+  if (/\bcurl\b.*\|\s*(ba)?sh\b/.test(cmd) || /\bwget\b.*\|\s*(ba)?sh\b/.test(cmd)) {
+    block("Refusing to pipe remote content to shell. Download and inspect first.");
+  }
+
+  // 8. npm/pnpm global installs
+  if (/\b(npm|pnpm|yarn)\s+(install|add)\s+(-g|--global)\b/.test(cmd)) {
+    block("Refusing global package install. Use project-local dependencies.");
+  }
+
+  process.exit(0);
+});
+
+function block(reason) {
+  console.error(reason);
+  process.exit(2);
+}

@@ -1,0 +1,24 @@
+package postgres
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
+)
+
+type Repository struct {
+	pool   *pgxpool.Pool
+	logger zerolog.Logger
+}
+
+func NewRepository(pool *pgxpool.Pool, logger zerolog.Logger) *Repository {
+	return &Repository{
+		pool:   pool,
+		logger: logger.With().Str("component", "postgres").Logger(),
+	}
+}
+
+func (r *Repository) Health(ctx context.Context) error {
+	return r.pool.Ping(ctx)
+}

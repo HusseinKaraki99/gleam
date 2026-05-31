@@ -1,0 +1,33 @@
+# {{name}} — Vite + React SPA
+
+This is the **{{name}}** frontend application built with Vite and React Router.
+
+## Structure
+
+```
+src/
+├── main.tsx           # Application entry point
+├── app.tsx            # Root component with router
+├── features/          # Feature modules (self-contained)
+│   └── <feature>/
+│       ├── components/
+│       ├── hooks/
+│       ├── helpers/
+│       ├── schemas/   # Zod validation
+│       └── index.ts   # Barrel export
+├── components/        # Shared app components
+│   └── ui/            # Reusable UI primitives
+├── lib/               # Utilities and configuration
+│   └── api/           # API client
+├── hooks/             # Shared React hooks
+└── routes/            # Route definitions and lazy-loaded pages
+```
+
+## Rules
+
+- Feature modules are self-contained with barrel exports
+- Shared components go in `components/`, feature-specific in `features/<name>/components/`
+- Max 250 lines per file
+- Use `@/*` path alias for imports within this app
+- Use `{{config.org}}/*` for shared package imports
+- Client-side routing via React Router — no SSR

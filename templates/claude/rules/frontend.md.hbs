@@ -1,0 +1,85 @@
+---
+globs: "apps/*/src/**/*.{ts,tsx}"
+---
+
+# Frontend Rules
+
+## Component patterns
+
+- Use **feature-based** folder structure: `features/<name>/components/`, `features/<name>/hooks/`, `features/<name>/utils/`.
+- Every feature folder must have a barrel `index.ts` that exports only the public API.
+- Shared UI components go in `components/ui/`. App-specific components go in `features/`.
+- One exported component per file. Internal helper components are fine in the same file if under 30 lines.
+
+## File size limits
+
+- **250 lines max** per `.ts` / `.tsx` file.
+- If a component exceeds 150 lines, extract hooks and sub-components.
+- If a utility file exceeds 100 lines, split by concern.
+
+## Naming conventions
+
+- Components: `PascalCase.tsx` (e.g., `UserCard.tsx`)
+- Hooks: `use-<name>.ts` in kebab-case (e.g., `use-auth.ts`)
+- Utilities: `kebab-case.ts` (e.g., `format-date.ts`)
+- Types: `<name>.types.ts` (e.g., `user.types.ts`)
+- Constants: `UPPER_SNAKE_CASE` for values, `kebab-case.ts` for files
+- Test files: `<name>.test.tsx` next to source
+
+## Import ordering
+
+Imports must follow this order, separated by blank lines:
+
+1. React / framework (`react`, `next/*`, `expo-router`)
+2. Third-party libraries (`@tanstack/*`, `zod`, `react-hook-form`)
+3. Internal libs (`@{{config.name}}/*`)
+4. Relative imports (features, components, hooks)
+5. Styles and assets
+
+Biome enforces this via organize-imports. Do not fight the formatter.
+
+## Accessibility (WCAG 2.1 AA)
+
+- All interactive elements must be keyboard-accessible.
+- All images must have `alt` text. Decorative images use `alt=""`.
+- Form inputs must have associated `<label>` elements or `aria-label`.
+- Color contrast ratio must meet AA (4.5:1 for text, 3:1 for large text).
+- Use semantic HTML (`<nav>`, `<main>`, `<article>`, `<button>`) over generic divs.
+- Never use `onClick` on non-interactive elements. Use `<button>` or `<a>`.
+
+## State management
+
+- Server state: `@tanstack/react-query`. Never store fetched data in local state.
+- Form state: `react-hook-form` + `zod` resolvers.
+- Local UI state: `useState` / `useReducer`. Keep it minimal.
+- Global client state: only if truly needed. Prefer lifting state or context.
+{{#ifHasStack config "next-ssr"}}
+
+## Next.js specific
+
+- Default to **Server Components**. Only add `"use client"` when the component needs interactivity.
+- Data fetching: use `async` server components or server actions. Never use `getServerSideProps`.
+- Use `next/image` for images, `next/link` for navigation.
+- Route groups `(group)` for layout organization. Parallel routes for complex UIs.
+- Metadata: use the `metadata` export or `generateMetadata` function, never `<Head>`.
+{{/ifHasStack}}
+
+## Testing standards
+
+- **Unit tests**: Pure functions, hooks (via `renderHook`), utilities.
+- **Component tests**: `@testing-library/react`. Test behavior, not implementation.
+- Query priority: `getByRole` > `getByLabelText` > `getByText` > `getByTestId`.
+- Never test internal state or implementation details.
+- Mock API calls, never real network requests in unit tests.
+
+## Forbidden patterns
+
+- `any` -- use `unknown` and narrow with type guards.
+- `console.log` in committed code -- use a proper logger or remove.
+- `// @ts-ignore` or `// @ts-expect-error` without a linked issue comment.
+- Inline styles -- use Tailwind CSS classes.
+- `dangerouslySetInnerHTML` without explicit sanitization.
+- Direct DOM manipulation (`document.querySelector`, etc.) in React components.
+- `useEffect` for derived state -- compute during render instead.
+- Index files that re-export everything with `export *`.
+- Prop drilling beyond 2 levels -- use composition or context.

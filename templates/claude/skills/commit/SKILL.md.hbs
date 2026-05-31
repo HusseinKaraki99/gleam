@@ -1,0 +1,97 @@
+---
+name: commit
+description: Stage changes and create a conventional commit. Scans for secrets before committing. Validates commit message format.
+user-invocable: true
+allowed-tools: Bash, Read
+argument-hint: "[optional: commit message -- if omitted, auto-generates from diff]"
+---
+
+# Commit
+
+Create a clean conventional commit for **{{config.displayName}}**.
+
+## Steps
+
+### 1. Check for secrets in staged/changed files
+
+```bash
+git diff --cached --name-only
+git diff --name-only
+```
+
+Scan changed files for these patterns. If any match, **abort and warn**:
+- API keys: `sk-`, `pk_`, `AKIA`, `ghp_`, `gho_`, `glpat-`, `xox[bpsa]-`
+- Tokens: `token=`, `bearer `, `authorization:`
+- Passwords: `password=`, `passwd=`, `secret=`
+- Private keys: `-----BEGIN.*PRIVATE KEY-----`
+- `.env` files being staged (should be gitignored)
+- Connection strings with embedded credentials
+
+### 2. Review the diff
+
+```bash
+git diff --cached --stat
+git diff --cached
+```
+
+If nothing is staged:
+```bash
+git diff --stat
+git diff
+```
+Ask what to stage, or stage all with `git add -A` if the changes are clearly safe (no secrets, no build artifacts).
+
+### 3. Determine commit type
+
+| Type | When |
+|------|------|
+| `feat` | New feature or user-facing capability |
+| `fix` | Bug fix |
+| `refactor` | Code restructuring, no behavior change |
+| `test` | Adding or updating tests only |
+| `docs` | Documentation changes only |
+| `ci` | CI/CD configuration |
+| `chore` | Dependencies, tooling, config |
+| `perf` | Performance improvement |
+| `style` | Formatting, whitespace (no logic change) |
+
+### 4. Determine scope from changed files
+
+| Path pattern | Scope |
+|-------------|-------|
+{{#each config.frontend.apps}}
+| `apps/{{this.name}}/` | `{{this.name}}` |
+{{/each}}
+{{#each config.backend.services}}
+| `apps/{{this.name}}/` or `services/{{this.name}}/` | `{{this.name}}` |
+{{/each}}
+| `libs/<name>/` | `<name>` |
+| `db/` | `db` |
+| `.github/` | `ci` |
+| `.claude/` | `claude` |
+| `docs/` | `docs` |
+| Root config files | `root` |
+| Multiple areas | omit scope or use broadest area |
+
+### 5. Create the commit
+
+```bash
+git commit -m "type(scope): descriptive message in imperative mood"
+```
+
+If `$ARGUMENTS` was provided, validate its format matches `type(scope): message` and use it.
+
+## Commit message rules
+
+- Subject line: max 100 characters.
+- Imperative mood: "add", "fix", "update" -- not "added", "fixed", "updated".
+- Lowercase after the colon: `feat(web): add dashboard` not `feat(web): Add Dashboard`.
+- Body (optional, blank line separator): explain WHY, not WHAT.
+- Footer: `Closes #123` or `Refs #456` for issue tracking.
+
+## Forbidden
+
+- Never use `--no-verify`. If hooks fail, fix the underlying issue.
+- Never commit `.env` files, credentials, or secrets.
+- Never create empty commits.
+- Never commit `node_modules`, `dist`, `.next`, `bin/`, or build artifacts.

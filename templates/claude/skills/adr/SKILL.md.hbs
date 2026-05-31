@@ -1,0 +1,98 @@
+---
+name: adr
+description: Create an Architecture Decision Record in docs/adr/. Documents significant architectural decisions with context, alternatives, and consequences.
+user-invocable: true
+allowed-tools: Bash, Read, Write
+argument-hint: "<title>"
+---
+
+# ADR -- Architecture Decision Record
+
+Create a new ADR documenting an architectural decision for **{{config.displayName}}**.
+
+## Steps
+
+### 1. Find the next ADR number
+
+```bash
+ls docs/adr/*.md 2>/dev/null | sort | tail -1
+```
+
+Extract the number from the last file. If no ADRs exist, start at `0002` (0001 is the initial architecture ADR created by the template).
+
+### 2. Create the ADR file
+
+Create `docs/adr/NNNN-<kebab-case-title>.md` with this template:
+
+```markdown
+# NNNN. <Title>
+
+Date: YYYY-MM-DD
+
+## Status
+
+Proposed
+
+## Context
+
+<What is the issue or question that prompted this decision? What constraints exist? What technical or business factors are at play?>
+
+## Decision
+
+<What is the change being made? Be specific about the approach chosen.>
+
+## Alternatives considered
+
+### Alternative 1: <name>
+- **Pros**: ...
+- **Cons**: ...
+- **Why rejected**: ...
+
+### Alternative 2: <name>
+- **Pros**: ...
+- **Cons**: ...
+- **Why rejected**: ...
+
+## Consequences
+
+### Positive
+- <benefit 1>
+- <benefit 2>
+
+### Negative
+- <tradeoff 1>
+- <tradeoff 2>
+
+### Risks
+- <risk 1 with mitigation>
+```
+
+### 3. Fill in the content
+
+- Use context from the current conversation to populate the sections.
+- The Context section should be factual and neutral.
+- The Decision section should be clear and specific.
+- Always include at least 2 alternatives considered.
+- Be honest about negative consequences and risks.
+
+### 4. Ask for review
+
+Present the ADR to the user. Ask them to:
+- Confirm the framing is accurate.
+- Add any missing context or alternatives.
+- Approve changing Status from "Proposed" to "Accepted".
+
+## ADR statuses
+
+| Status | Meaning |
+|--------|---------|
+| Proposed | Under discussion, not yet agreed |
+| Accepted | Team has agreed, implementing |
+| Deprecated | Superseded by a later ADR |
+| Superseded by NNNN | Replaced by a specific later ADR |
+
+## Rules
+
+- One decision per ADR. Do not bundle multiple decisions.
+- ADRs are immutable once accepted. To change a decision, create a new ADR that supersedes the old one.
+- Use the title from `$ARGUMENTS` if provided. Otherwise, derive from the conversation.

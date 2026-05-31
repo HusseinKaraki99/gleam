@@ -1,0 +1,171 @@
+---
+name: self-review
+description: Self-review your branch before requesting human review. Runs sanity gates, deep per-file review, and outputs a severity-grouped checklist. Read-only.
+user-invocable: true
+allowed-tools: Bash, Read, Grep, Glob, Task
+argument-hint: "[optional: PR number or URL -- defaults to current branch diff vs main]"
+---
+
+# Self-Review
+
+Run an opinionated review of your changes **before** requesting human review. This is read-only -- it does not modify code or post comments to GitHub.
+
+## Step 0 -- Determine review target
+
+If `$ARGUMENTS` is a PR number or URL:
+```bash
+gh pr view "$ARGUMENTS" --json number,title,body,baseRefName,headRefName,additions,deletions,files
+gh pr diff "$ARGUMENTS"
+```
+
+Otherwise, review the current branch against main:
+```bash
+git fetch origin main 2>/dev/null
+git diff --name-status origin/main...HEAD
+git diff --stat origin/main...HEAD
+git log origin/main..HEAD --oneline
+```
+
+If no changes exist, stop and say "No changes to review."
+
+## Step 1 -- Sanity gates
+
+Run all gates. Report each as PASS or FAIL. Continue even if some fail.
+
+### 1a. Conventional commit format
+```bash
+git log origin/main..HEAD --pretty='%s' | head -20
+```
+Every subject must match: `(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([\w-]+\))?: .+`
+
+### 1b. Lint
+```bash
+pnpm nx affected -t lint --base=origin/main 2>&1 | tail -20
+```
+
+### 1c. Tests pass
+```bash
+pnpm nx affected -t test --base=origin/main 2>&1 | tail -30
+```
+
+### 1d. TypeScript compiles
+```bash
+pnpm nx affected -t typecheck --base=origin/main 2>&1 | tail -20
+```
+
+{{#ifHasStack config "go"}}
+### 1e. Go lint + test
+```bash
+golangci-lint run ./... 2>&1 | tail -20
+go test ./... -short -count=1 2>&1 | tail -20
+```
+{{/ifHasStack}}
+
+{{#ifHasStack config "dotnet"}}
+### 1e. .NET build + test
+```bash
+dotnet build --configuration Release 2>&1 | tail -10
+dotnet test --configuration Release --no-build 2>&1 | tail -20
+```
+{{/ifHasStack}}
+
+## Step 2 -- Deep review per file
+
+Read each changed file. For each file, check the relevant items below based on file type.
+
+### Architecture
+- [ ] Module boundaries respected (no cross-app imports)
+- [ ] Shared code in `libs/`, not duplicated across apps
+- [ ] Workspace aliases used, not relative `../../` paths across packages
+{{#if config.isPolyglot}}
+- [ ] Go and Node.js apps do not share code directly
+{{/if}}
+
+### Code quality
+- [ ] File size within limits (250 TS/TSX{{#ifHasStack config "go"}}, 400 Go{{/ifHasStack}}{{#ifHasStack config "dotnet"}}, 300 C#{{/ifHasStack}})
+- [ ] Functions under 50 lines, max 5 parameters
+- [ ] No god files (`utils.ts`, `helpers.go`, `common.cs`)
+- [ ] Barrel exports for public APIs
+- [ ] Naming conventions followed per stack rules
+- [ ] No `any` in TypeScript
+- [ ] No `console.log` in committed code
+- [ ] No commented-out code blocks
+- [ ] No TODO/FIXME without issue reference
+
+### Security
+- [ ] No secrets, tokens, or API keys in code
+- [ ] Input validated at API boundaries
+- [ ] No injection vulnerabilities (SQL, XSS, command)
+- [ ] No `dangerouslySetInnerHTML` without sanitization
+{{#ifMultiTenancy config}}
+- [ ] Tenant isolation maintained in all queries
+- [ ] Tenant ID derived from session, not user input
+{{/ifMultiTenancy}}
+
+### Tests
+- [ ] New public functions/endpoints/components have tests
+- [ ] Tests cover happy path AND at least one error case
+- [ ] No `test.skip` / `t.Skip()` without linked issue
+- [ ] No snapshot tests for complex components
+- [ ] Test files are next to source files
+
+### Performance
+- [ ] No N+1 queries
+- [ ] No unnecessary re-renders in React components
+- [ ] Database indexes present for queried/filtered columns
+- [ ] List endpoints are paginated
+
+{{#ifHasStack config "next-ssr"}}
+### Next.js specific
+- [ ] Server Components by default, `"use client"` only when needed
+- [ ] `next/image` for images, `next/link` for navigation
+- [ ] No functions passed from server to client components
+{{/ifHasStack}}
+
+{{#ifHasStack config "go"}}
+### Go specific
+- [ ] Hexagonal architecture respected (domain has zero external imports)
+- [ ] `context.Context` as first parameter on public functions
+- [ ] Errors wrapped: `fmt.Errorf("...: %w", err)`
+- [ ] No `init()`, no global state, no bare `go` statements
+{{/ifHasStack}}
+
+{{#ifHasStack config "nestjs"}}
+### NestJS specific
+- [ ] Controllers are thin (delegate to services)
+- [ ] Validation via class-validator DTOs + ValidationPipe
+- [ ] No direct database access from controllers
+{{/ifHasStack}}
+
+{{#ifHasStack config "dotnet"}}
+### .NET specific
+- [ ] Feature folder pattern used
+- [ ] FluentValidation for request validation
+- [ ] Async all the way, no `.Result` or `.Wait()`
+{{/ifHasStack}}
+
+## Step 3 -- Output
+
+```
+## Self-Review Results
+
+### BLOCKERS (must fix before merge)
+- [file:line] Description
+
+### WARNINGS (should fix, creates tech debt)
+- [file:line] Description
+
+### SUGGESTIONS (nice to have)
+- [file:line] Description
+
+### Sanity gates
+- Commits: PASS/FAIL
+- Lint: PASS/FAIL
+- Tests: PASS/FAIL
+- Typecheck: PASS/FAIL
+
+### Verdict: READY / NOT READY
+```
+
+If zero blockers and zero gate failures: "Ready for human review."
+Otherwise: "Not ready. Fix N blockers and M gate failures first."

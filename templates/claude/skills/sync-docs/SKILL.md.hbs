@@ -1,0 +1,223 @@
+---
+name: sync-docs
+description: "Comprehensive document synchronization. Detects drift between PRD, specs, CLAUDE.md, SESSION_LOG, and NEXT_STEPS. Updates everything to match current state."
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit, Grep
+---
+
+# Sync Docs
+
+Comprehensive document synchronization for **{{config.displayName}}**. Detects drift between all project documents and updates them to match the current state of the codebase and decisions.
+
+Run this:
+- Before ending a session
+- After completing significant work
+- After locked decisions
+- When you suspect docs are out of date
+
+## Step 1: Scan for drift
+
+Read all project documents and check for consistency. Report every contradiction or stale reference found.
+
+### 1a. Gather current state
+
+```bash
+git branch --show-current
+git log --oneline -10
+git diff --stat HEAD~5..HEAD 2>/dev/null | tail -20
+```
+
+Read the following files (if they exist):
+- `CLAUDE.md`
+- `SESSION_LOG.md`
+- `NEXT_STEPS.md`
+- `docs/product/PRD.md`
+- All files in `docs/specs/`
+- All files in `docs/adr/`
+- All files in `docs/plans/`
+
+### 1b. Check PRD against CLAUDE.md
+
+If `docs/product/PRD.md` exists:
+- Do PRD decisions match CLAUDE.md rules?
+- Are module boundaries in CLAUDE.md consistent with what the PRD describes?
+- Are tech stack references in CLAUDE.md consistent with PRD constraints?
+- Are there product rules in the PRD that should be in CLAUDE.md as forbidden actions?
+
+### 1c. Check feature specs against implementation
+
+For each spec in `docs/specs/`:
+- Check if the feature has been implemented:
+  ```bash
+  # Look for files matching the feature name in the codebase
+  find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.go" -o -name "*.cs" \) | grep -i "<feature-name>" 2>/dev/null | head -10
+  ```
+- If implemented, check for deviations:
+  - Does the data model match? (Compare spec tables against actual schema files)
+  - Do API endpoints match? (Compare spec endpoints against actual route/controller files)
+  - Were acceptance criteria met?
+- If not yet implemented, verify the spec is still listed in NEXT_STEPS.
+
+### 1d. Check ADRs against code
+
+For each ADR in `docs/adr/`:
+- Is the decision still being followed in the codebase?
+- Has the decision been superseded without updating the ADR?
+- Are there code patterns that contradict an accepted ADR?
+
+### 1e. Check NEXT_STEPS against SESSION_LOG
+
+- Items marked as done in SESSION_LOG should not appear as pending in NEXT_STEPS.
+- Items in NEXT_STEPS should not reference files or modules that have been renamed or removed.
+- Priority ordering in NEXT_STEPS should reflect the latest decisions from SESSION_LOG.
+
+### 1f. Check implementation plans against specs
+
+For each plan in `docs/plans/`:
+- Does the plan still match its source spec?
+- Have any tasks been completed? (Check if referenced files exist)
+- Are task estimates still accurate based on what was learned during implementation?
+
+## Step 2: Auto-update SESSION_LOG
+
+Prepend a new entry at the top of `SESSION_LOG.md`:
+
+```markdown
+## YYYY-MM-DD -- [Summary of what was done]
+
+**Branch**: [current branch]
+**Commit range**: [first..last commit hash of this session]
+
+### Accomplished
+- [What was built, fixed, or changed]
+- [Key files created or modified]
+
+### Decisions made
+- [Decision 1] — [Rationale]
+- [Decision 2] — [Rationale]
+
+### Files changed
+- `path/to/file.ts` — [What changed and why]
+- `path/to/other.ts` — [What changed and why]
+
+### Open questions
+- [Question that needs an answer]
+```
+
+Use today's date. Derive the summary from git log and the work done in this session. List only significant files, not every file touched.
+
+## Step 3: Update NEXT_STEPS
+
+Update `NEXT_STEPS.md`:
+
+### Move completed items
+- Check each item in Section 0 (Current Sprint) against SESSION_LOG and git history.
+- Items that are done: move to a "## Completed" section at the bottom, with the date completed.
+- Items partially done: update the description to reflect remaining work.
+
+### Add discovered work
+- If implementation revealed new tasks, add them to the appropriate section.
+- If bugs were found, add them with a `[BUG]` prefix.
+- If tech debt was identified, add it to a lower-priority section.
+
+### Update priorities
+- If priorities shifted based on new information, reorder items.
+- If a blocker was discovered, move it to the top and mark it `[BLOCKED]`.
+- If dependencies changed, update the ordering.
+
+### Update blockers
+- Add any new blockers discovered during the session.
+- Remove blockers that were resolved.
+
+## Step 4: Update CLAUDE.md
+
+Update `CLAUDE.md` **only** if any of the following actually changed:
+
+- **New module boundaries** — A new app, service, or lib was added.
+- **New forbidden actions** — A pattern was identified as harmful and should never be used.
+- **New skills or agents added** — Reference new skills/agents created during the session.
+- **Tech stack changes** — A new library, framework, or service was added.
+- **Changed conventions** — Naming, file organization, or coding conventions were updated.
+- **New ADRs** — Reference significant architectural decisions.
+
+Do NOT update CLAUDE.md for:
+- Routine feature work
+- Bug fixes that do not change conventions
+- Test additions
+- Documentation changes
+
+CLAUDE.md is a constitution, not a changelog.
+
+## Step 5: Update feature specs
+
+If the implementation of a feature deviated from its spec:
+
+1. Read the spec from `docs/specs/<feature>.md`.
+2. Identify the deviations:
+   - Data model changes (different columns, different types, new tables)
+   - API changes (different endpoints, different request/response shapes)
+   - UI changes (different screens, different interactions)
+   - Scope changes (features added or removed)
+3. Update the spec to match the actual implementation.
+4. Add a note at the top of the spec:
+
+```markdown
+_Last updated: [today's date]_
+_Status: Updated (implementation deviated from original spec)_
+
+### Spec deviations log
+- [Date]: [What changed and why]
+```
+
+This ensures the spec remains a useful reference, not a historical artifact.
+
+## Step 6: Generate consistency report
+
+After all updates, produce a consistency report:
+
+```
+# Document Consistency Report
+
+_Date: [today's date]_
+_Session: [branch name]_
+
+## Status
+
+| Document | Status | Issues |
+|----------|--------|--------|
+| CLAUDE.md | OK / UPDATED / STALE | [Details if not OK] |
+| SESSION_LOG.md | UPDATED | [New entry added] |
+| NEXT_STEPS.md | OK / UPDATED | [What changed] |
+| PRD | OK / DRIFT / N/A | [Contradictions found] |
+| Specs | OK / UPDATED / DRIFT | [Which specs drifted] |
+| ADRs | OK / CONTRADICTED | [Which ADRs are contradicted] |
+| Plans | OK / OUTDATED | [Which plans need updating] |
+
+## Contradictions found
+
+[List any contradictions between documents, with specific file and section references]
+
+## Stale references
+
+[List any references to files, modules, or concepts that no longer exist]
+
+## Actions taken
+
+1. [What was updated and why]
+2. [What was updated and why]
+
+## Manual action needed
+
+[List any issues that could not be auto-resolved and need human input]
+```
+
+## Rules
+
+- Always read files before updating them. Never assume content.
+- Be conservative with CLAUDE.md changes. When in doubt, do not change it.
+- SESSION_LOG entries must be factual. Describe what happened, not what you planned to happen.
+- Never delete SESSION_LOG entries. It is an append-only log.
+- NEXT_STEPS completed items should be moved, not deleted, so there is a record.
+- If a spec was never implemented, do not update it. Only update specs where implementation diverged.
+- Report contradictions even if you cannot resolve them. The user needs to know.
+- If no changes are needed, say so. Do not make unnecessary edits.

@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+// SessionStart hook — inject workspace state into Claude's context.
+// Wired in .claude/settings.json under hooks.SessionStart.
+// Always exits 0 — context injection is best-effort.
+
+const { execFileSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+
+const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+
+// 1. Read welcome message
+let welcomeBlock = "";
+try {
+  const welcomePath = path.join(projectDir, ".claude", "welcome-message.md");
+  if (fs.existsSync(welcomePath)) {
+    const raw = fs.readFileSync(welcomePath, "utf-8").trim();
+    if (raw) {
+      welcomeBlock =
+        `## Welcome\n\n` +
+        `Show this greeting at the start of your first response, then proceed normally.\n\n` +
+        `\`\`\`markdown\n${raw}\n\`\`\`\n`;
+    }
+  }
+} catch { /* skip */ }
+
+// 2. Workspace state
+const lines = [];
+try {
+  const branch = execFileSync("git", ["symbolic-ref", "--short", "-q", "HEAD"], {
+    encoding: "utf-8",
+    stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
+  if (branch) lines.push(`Current branch: \`${branch}\``);
+
+  // Extract ticket ID from branch name (pattern: feat/PROJ-123-description)
+  const ticketMatch = branch.match(/[A-Z]+-\d+/);
+  if (ticketMatch) {
+    lines.push(`Ticket: \`${ticketMatch[0]}\``);
+  }
+
+  // Ahead/behind vs main
+  try {
+    const aheadBehind = execFileSync(
+      "git",
+      ["rev-list", "--left-right", "--count", `origin/main...${branch}`],
+      { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 3_000 }
+    ).trim();
+    const [behind, ahead] = aheadBehind.split(/\s+/).map((n) => parseInt(n, 10));
+    if (!Number.isNaN(behind) && !Number.isNaN(ahead)) {
+      lines.push(`vs origin/main: ${ahead} ahead, ${behind} behind`);
+    }
+  } catch { /* origin/main may not be fetched */ }
+
+  // Status summary
+  try {
+    const status = execFileSync("git", ["status", "--porcelain=v1"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 3_000,
+    }).trim();
+    if (status) {
+      const files = status.split("\n").filter(Boolean);
+      const staged = files.filter((l) => /^[MARC]/.test(l)).length;
+      const modified = files.filter((l) => /^.[MARC]/.test(l)).length;
+      const untracked = files.filter((l) => l.startsWith("??")).length;
+      const summary = [];
+      if (staged) summary.push(`${staged} staged`);
+      if (modified) summary.push(`${modified} modified`);
+      if (untracked) summary.push(`${untracked} untracked`);
+      if (summary.length) lines.push(`Working tree: ${summary.join(", ")}`);
+    } else {
+      lines.push("Working tree: clean");
+    }
+  } catch { /* ignore */ }
+
+  // Stash count
+  try {
+    const stash = execFileSync("git", ["stash", "list"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 2_000,
+    }).trim();
+    if (stash) {
+      const count = stash.split("\n").filter(Boolean).length;
+      lines.push(`Stash: ${count} stashed change${count === 1 ? "" : "s"}`);
+    }
+  } catch { /* ignore */ }
+} catch { /* detached HEAD or non-git */ }
+
+const workspaceBlock = lines.length > 0
+  ? `## Workspace state\n\n${lines.map((l) => `- ${l}`).join("\n")}\n`
+  : "";
+
+// 3. Hints block
+let hintsBlock = "";
+try {
+  const hintsPath = path.join(projectDir, ".claude", "hints.txt");
+  if (fs.existsSync(hintsPath)) {
+    const allHints = fs.readFileSync(hintsPath, "utf-8")
+      .split("\n")
+      .filter((l) => l.trim());
+    if (allHints.length > 0) {
+      const hint = allHints[Math.floor(Math.random() * allHints.length)];
+      hintsBlock = `## Tip\n\n> ${hint}\n`;
+    }
+  }
+} catch { /* skip */ }
+
+// 4. Combine + emit
+const additionalContext = [welcomeBlock, workspaceBlock, hintsBlock].filter(Boolean).join("\n");
+
+if (!additionalContext) {
+  process.exit(0);
+}
+
+const output = {
+  hookSpecificOutput: {
+    hookEventName: "SessionStart",
+    additionalContext,
+  },
+};
+
+process.stdout.write(JSON.stringify(output));
+process.exit(0);

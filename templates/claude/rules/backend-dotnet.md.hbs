@@ -1,0 +1,95 @@
+---
+globs: "apps/**/*.cs"
+---
+
+# Backend .NET (ASP.NET Core) Rules
+
+## Feature folder pattern
+
+Organize by feature, not by layer:
+
+```
+Features/
+  Users/
+    UsersController.cs        -- Thin controller, delegates to service
+    UsersService.cs           -- Business logic
+    CreateUserRequest.cs      -- Input DTO + FluentValidation
+    CreateUserValidator.cs    -- Validator class
+    UserResponse.cs           -- Output DTO
+    UserEntity.cs             -- EF Core entity (if data-owning feature)
+    UsersServiceTests.cs      -- Unit tests
+  Orders/
+    ...
+Common/
+  Middleware/
+    ExceptionMiddleware.cs
+  Extensions/
+    ServiceExtensions.cs
+  Models/
+    PagedResult.cs
+    ApiError.cs
+```
+
+- One class per file. File name matches class name.
+- Controllers are thin: parse request, call service, return response.
+- Services contain business logic and take dependencies via constructor injection.
+
+## Dependency injection
+
+- Register services in feature-specific extension methods: `services.AddUsersFeature()`.
+- Use `Scoped` lifetime for services that hold per-request state.
+- Use `Singleton` for stateless services and configuration.
+- Never use `Transient` unless there is a specific reason.
+- Avoid service locator pattern (`IServiceProvider.GetService`). Use constructor injection.
+
+## EF Core patterns
+
+- DbContext is `Scoped`. One context per request.
+- Use `IQueryable` in repositories, materialize (`.ToListAsync()`) in services.
+- Always use `async` database operations. Never block with `.Result` or `.Wait()`.
+- Migrations are sequential and named descriptively: `AddUserEmailIndex`.
+- Never modify existing migrations. Create a new one for changes.
+- Use `HasIndex` fluent API for indexes, not data annotations.
+{{#ifMultiTenancy config}}
+- Apply global query filter for tenant isolation: `modelBuilder.Entity<T>().HasQueryFilter(e => e.TenantId == currentTenantId)`.
+{{/ifMultiTenancy}}
+
+## Validation
+
+- Use **FluentValidation** for request validation.
+- One validator class per request DTO.
+- Register validators via `AddValidatorsFromAssembly`.
+- Use the validation pipeline (middleware or filter) -- never validate manually in controllers.
+
+## Error handling
+
+- Use `ExceptionMiddleware` for global error handling.
+- Throw domain exceptions (`NotFoundException`, `ConflictException`).
+- Middleware maps domain exceptions to HTTP status codes.
+- Return consistent error shape: `{ statusCode, message, errors[] }`.
+- Log exceptions with structured logging (Serilog).
+
+## Testing
+
+- **Unit tests**: `xUnit` + `FluentAssertions` + `NSubstitute`.
+- **Integration tests**: `WebApplicationFactory<Program>` for API tests.
+- Test file naming: `<ClassName>Tests.cs`.
+- Use `Fact` for single cases, `Theory` + `InlineData` for parameterized tests.
+- Mock external dependencies (DbContext, HttpClient). Use in-memory database for repository tests.
+
+## Naming conventions
+
+- Async methods: suffix with `Async` (e.g., `GetUserAsync`).
+- Interfaces: prefix with `I` (e.g., `IUserService`).
+- Private fields: prefix with `_` (e.g., `_userService`).
+- Constants: `PascalCase` (e.g., `MaxRetryCount`).
+
+## Forbidden patterns
+
+- `dynamic` type -- use strong typing.
+- `Thread.Sleep` -- use `Task.Delay` or proper async patterns.
+- `public` fields on classes -- use properties.
+- Catching `Exception` without rethrowing or logging.
+- Service locator (`IServiceProvider.GetService`) in application code.
+- Static mutable state.
+- `#region` directives -- if you need regions, the class is too large.

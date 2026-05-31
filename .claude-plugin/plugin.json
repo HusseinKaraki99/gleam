@@ -1,0 +1,10 @@
+{
+  "name": "gleam",
+  "description": "Generate production-ready monorepos pre-configured for Claude Code and AI-agent-driven development. Run /init-project to scaffold a new project.",
+  "version": "0.1.0",
+  "author": { "name": "Hussein Karaki" },
+  "homepage": "https://github.com/HusseinKaraki99/gleam",
+  "repository": "https://github.com/HusseinKaraki99/gleam",
+  "license": "MIT",
+  "keywords": ["scaffold", "monorepo", "template", "claude-code", "generator"]
+}

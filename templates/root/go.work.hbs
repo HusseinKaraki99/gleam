@@ -1,0 +1,9 @@
+go 1.24.3
+
+use (
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+	./services/{{this.name}}
+{{/ifEquals}}
+{{/each}}
+)

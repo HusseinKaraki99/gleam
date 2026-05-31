@@ -1,0 +1,82 @@
+---
+globs: "db/**/*"
+---
+
+# Database Rules
+
+## Migration discipline
+
+- Migrations are **append-only**. Never edit an existing migration file.
+- Every schema change requires a new migration with a descriptive name.
+- Migrations must be **idempotent** -- safe to run multiple times.
+- Always test migrations against a copy of production data structure before merging.
+- Destructive migrations (drop column, drop table) must be done in two phases:
+  1. Deploy code that no longer reads the column/table.
+  2. Deploy migration that drops it.
+{{#ifHasStack config "drizzle"}}
+- Generate migrations with `pnpm db:generate`. Never hand-write migration SQL.
+- Run migrations with `pnpm db:migrate`.
+{{/ifHasStack}}
+{{#ifHasStack config "ef-core"}}
+- Generate migrations with `dotnet ef migrations add <Name>`.
+- Run migrations with `dotnet ef database update`.
+{{/ifHasStack}}
+{{#ifHasStack config "sqlc"}}
+- Write migrations in raw SQL in `db/migrations/`.
+- Run migrations with `goose up` or the configured migration tool.
+- After schema changes, regenerate Go code with `sqlc generate`.
+{{/ifHasStack}}
+
+## Schema standards
+
+- Every table must have:
+  - `id` -- UUID primary key (preferred) or BIGSERIAL.
+  - `created_at` -- `TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+  - `updated_at` -- `TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+- Use **soft deletes** (`deleted_at TIMESTAMPTZ NULL`) for user-facing entities. Hard delete only for internal/transient data.
+- Column names: `snake_case`. Table names: `snake_case`, plural (e.g., `users`, `order_items`).
+- Boolean columns: prefix with `is_` or `has_` (e.g., `is_active`, `has_verified_email`).
+- Use `TEXT` over `VARCHAR` unless a strict length limit is business-required.
+{{#ifMultiTenancy config}}
+
+## Multi-tenancy
+
+{{#ifEquals config.multiTenancy "row-level"}}
+- Every tenant-scoped table **must** have a `tenant_id UUID NOT NULL` column.
+- Create a composite index on `(tenant_id, id)` for every tenant-scoped table.
+- Row-Level Security (RLS) policies are mandatory for tenant isolation.
+- Seed data must create at least 2 tenants for testing.
+{{/ifEquals}}
+{{#ifEquals config.multiTenancy "schema"}}
+- Each tenant operates in its own PostgreSQL schema.
+- The `public` schema holds system tables (tenants, users, billing).
+- Migrations must run against all tenant schemas. Use a migration runner that supports this.
+- Connection pooling must route to the correct schema based on request context.
+{{/ifEquals}}
+{{/ifMultiTenancy}}
+
+## Foreign key rules
+
+- Every foreign key must have an explicit `ON DELETE` clause.
+  - `CASCADE` for child records that cannot exist without the parent.
+  - `SET NULL` for optional associations.
+  - `RESTRICT` for records that must be explicitly unlinked first.
+- Never use `ON DELETE NO ACTION` (the default) without documenting why.
+- Name foreign key constraints: `fk_<table>_<referenced_table>_<column>`.
+
+## Index requirements
+
+- Every foreign key column must be indexed.
+- Columns used in `WHERE`, `ORDER BY`, or `JOIN` clauses must have indexes.
+- Use partial indexes for filtered queries (e.g., `WHERE deleted_at IS NULL`).
+- Composite indexes: put the highest-cardinality column first.
+- Name indexes: `idx_<table>_<columns>` (e.g., `idx_users_email`).
+- Monitor slow queries and add indexes as needed. Do not over-index.
+
+## Query rules
+
+- Never use `SELECT *`. List columns explicitly.
+- Use parameterized queries. Never interpolate user input into SQL.
+- Paginate large result sets. Default limit: 20, max limit: 100.
+- Use `EXPLAIN ANALYZE` for queries touching large tables.
+- Avoid N+1 queries. Use JOINs or batch loading.

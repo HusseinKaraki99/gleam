@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+{{#ifEquals config.database.type "postgres"}}
+  postgres:
+    image: postgres:17-alpine
+    container_name: {{config.name}}-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: {{config.name}}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+{{/ifEquals}}
+
+  redis:
+    image: redis:7-alpine
+    container_name: {{config.name}}-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{{#ifEquals config.database.type "postgres"}}
+  postgres-data:
+{{/ifEquals}}
+  redis-data:

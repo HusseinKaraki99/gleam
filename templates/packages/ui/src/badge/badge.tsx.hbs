@@ -1,0 +1,75 @@
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '../primitives/cn';
+import type { ComponentMeta } from '../component-meta';
+
+/* ------------------------------------------------------------------ */
+/* Variants                                                            */
+/* ------------------------------------------------------------------ */
+const badgeVariants = cva(
+  'inline-flex items-center font-[var(--font-medium)] transition-colors duration-[var(--duration-fast)]',
+  {
+    variants: {
+      variant: {
+        default:
+          'bg-[var(--color-accent-subtle)] text-[var(--color-accent)]',
+        success:
+          'bg-[var(--color-success-light)] text-[var(--color-success-dark)]',
+        warning:
+          'bg-[var(--color-warning-light)] text-[var(--color-warning-dark)]',
+        danger:
+          'bg-[var(--color-danger-light)] text-[var(--color-danger-dark)]',
+        info:
+          'bg-[var(--color-info-light)] text-[var(--color-info-dark)]',
+        outline:
+          'border border-[var(--color-border)] text-[var(--color-fg-muted)] bg-transparent',
+      },
+      size: {
+        sm: 'text-[var(--text-xs)] px-[var(--space-2)] py-[1px] rounded-[var(--radius-sm)]',
+        md: 'text-[var(--text-xs)] px-[var(--space-2)] py-[var(--space-1)] rounded-[var(--radius-md)]',
+        lg: 'text-[var(--text-sm)] px-[var(--space-3)] py-[var(--space-1)] rounded-[var(--radius-md)]',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  },
+);
+
+/* ------------------------------------------------------------------ */
+/* Component                                                           */
+/* ------------------------------------------------------------------ */
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {}
+
+export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <span
+      ref={ref}
+      className={cn(badgeVariants({ variant, size }), className)}
+      {...props}
+    />
+  ),
+);
+
+Badge.displayName = 'Badge';
+
+/* ------------------------------------------------------------------ */
+/* Metadata                                                            */
+/* ------------------------------------------------------------------ */
+export const meta: ComponentMeta = {
+  name: 'Badge',
+  description: 'A small status indicator label with semantic color variants.',
+  variants: {
+    variant: ['default', 'success', 'warning', 'danger', 'info', 'outline'],
+    size: ['sm', 'md', 'lg'],
+  },
+  defaultVariant: {
+    variant: 'default',
+    size: 'md',
+  },
+  slots: ['children'],
+  accessibilityRole: 'status',
+};

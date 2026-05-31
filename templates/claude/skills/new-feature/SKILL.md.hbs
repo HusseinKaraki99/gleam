@@ -1,0 +1,143 @@
+---
+name: new-feature
+description: Scaffold a new feature module across the relevant stack(s). Creates the correct folder structure, boilerplate files, and registers the module.
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit
+argument-hint: "<feature-name> [--stack nestjs|nextjs|go|dotnet|expo]"
+---
+
+# New Feature
+
+Scaffold a new feature with the correct folder structure for **{{config.displayName}}**.
+
+## Steps
+
+1. Parse `$ARGUMENTS` for feature name and optional `--stack` flag.
+2. Convert feature name to kebab-case for files and PascalCase for classes/components.
+3. If no `--stack` flag, scaffold across ALL stacks in the project.
+
+{{#ifHasStack config "next-ssr"}}
+### Next.js feature
+
+Create in `apps/{{#each config.frontend.apps}}{{#ifEquals this.type "next-ssr"}}{{this.name}}{{/ifEquals}}{{/each}}/src/features/<name>/`:
+
+```
+components/
+  <Name>.tsx            -- Main feature component
+  <Name>.test.tsx       -- Component test
+hooks/
+  use-<name>.ts         -- Feature-specific hook (if needed)
+utils/
+  <name>.utils.ts       -- Feature utilities (if needed)
+schemas/
+  <name>.schemas.ts     -- Zod validation schemas
+types/
+  <name>.types.ts       -- Feature TypeScript types
+index.ts                -- Barrel export (public API only)
+```
+
+If the feature needs a route, also create `app/<name>/page.tsx`.
+{{/ifHasStack}}
+
+{{#ifHasStack config "vite-spa"}}
+### Vite React feature
+
+Create in `apps/{{#each config.frontend.apps}}{{#ifEquals this.type "vite-spa"}}{{this.name}}{{/ifEquals}}{{/each}}/src/features/<name>/`:
+
+```
+components/
+  <Name>.tsx
+  <Name>.test.tsx
+hooks/
+  use-<name>.ts
+schemas/
+  <name>.schemas.ts
+index.ts
+```
+{{/ifHasStack}}
+
+{{#ifHasStack config "nestjs"}}
+### NestJS module
+
+Create in `apps/{{#each config.backend.services}}{{#ifEquals this.type "nestjs"}}{{this.name}}{{/ifEquals}}{{/each}}/src/modules/<name>/`:
+
+```
+<name>.module.ts           -- @Module declaration
+<name>.controller.ts       -- HTTP layer (thin)
+<name>.service.ts          -- Business logic
+<name>.repository.ts       -- Data access (if DB-backed)
+dto/
+  create-<name>.dto.ts     -- Input DTO with class-validator
+  update-<name>.dto.ts     -- Partial update DTO
+  <name>-response.dto.ts   -- Output DTO
+entities/
+  <name>.entity.ts         -- Domain entity
+<name>.service.spec.ts     -- Unit tests
+<name>.controller.spec.ts  -- Controller tests
+```
+
+Register the module in `app.module.ts` imports array.
+{{/ifHasStack}}
+
+{{#ifHasStack config "go"}}
+### Go feature
+
+Add to the relevant service in `services/<service-name>/`:
+
+```
+domain/<name>.go            -- Domain model
+ports/<name>_repository.go  -- Repository interface
+usecase/<name>.go           -- Business logic
+usecase/<name>_test.go      -- Unit tests
+adapters/http/<name>_handler.go       -- HTTP handler
+adapters/http/<name>_handler_test.go  -- Handler tests
+adapters/postgres/<name>_repository.go      -- DB implementation
+adapters/postgres/<name>_repository_test.go -- Integration tests
+```
+
+Register the handler routes in the HTTP adapter's router.
+{{/ifHasStack}}
+
+{{#ifHasStack config "dotnet"}}
+### .NET feature
+
+Create in `apps/{{#each config.backend.services}}{{#ifEquals this.type "dotnet"}}{{this.name}}{{/ifEquals}}{{/each}}/Features/<Name>/`:
+
+```
+<Name>Controller.cs         -- API controller
+<Name>Service.cs            -- Business logic
+I<Name>Service.cs           -- Service interface
+Dto/
+  Create<Name>Request.cs    -- Input DTO
+  Update<Name>Request.cs    -- Update DTO
+  <Name>Response.cs         -- Output DTO
+Validators/
+  Create<Name>Validator.cs  -- FluentValidation
+Entities/
+  <Name>Entity.cs           -- EF Core entity
+<Name>ServiceTests.cs       -- Unit tests
+```
+
+Register services in DI: create `Add<Name>Feature()` extension method.
+{{/ifHasStack}}
+
+{{#if config.mobile.enabled}}
+### Expo feature
+
+Create in `apps/mobile/features/<name>/`:
+
+```
+components/
+  <Name>.tsx
+  <Name>.test.tsx
+hooks/
+  use-<name>.ts
+index.ts
+```
+{{/if}}
+
+## After scaffolding
+
+1. Ensure all files have correct imports and boilerplate.
+2. Run `pnpm nx run-many -t typecheck` to verify everything compiles.
+3. Report what was created and any manual steps needed.

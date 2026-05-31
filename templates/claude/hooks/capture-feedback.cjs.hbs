@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+// UserPromptSubmit hook — capture durable developer feedback into a project log.
+// Wired in .claude/settings.json under hooks.UserPromptSubmit.
+// Non-blocking and silent: always exits 0, never adds to Claude's context,
+// so it can't interfere with the prompt. Review captures with /feedback-review.
+
+const fs = require("fs");
+const path = require("path");
+const { execFileSync } = require("child_process");
+
+const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+
+function readPrompt() {
+  try {
+    const data = JSON.parse(fs.readFileSync(0, "utf-8"));
+    return typeof data.prompt === "string" ? data.prompt : "";
+  } catch {
+    return "";
+  }
+}
+
+// Kept deliberately narrow so the log stays high-signal: standing instructions
+// and corrections worth remembering, not every message. `#feedback` is the
+// explicit, always-captured marker; the rest are durable-guidance patterns.
+const EXPLICIT = /(^|\s)#feedback\b/i;
+const SIGNALS = [
+  /\bfrom now on\b/i,
+  /\bgoing forward\b/i,
+  /\b(always|never) (use|do|run|prefer|avoid|commit|name|write|put|call)\b/i,
+  /\b(make sure|remember) to\b/i,
+  /\b(stop|don'?t|do not) (doing|using|adding|creating|writing)\b/i,
+  /\bi (told|already told|said|asked) you\b/i,
+  /\b(prefer|use) .+ (instead of|rather than)\b/i,
+];
+
+function classify(prompt) {
+  if (EXPLICIT.test(prompt)) return "explicit";
+  if (SIGNALS.some((re) => re.test(prompt))) return "signal";
+  return null;
+}
+
+function currentBranch() {
+  try {
+    return execFileSync("git", ["symbolic-ref", "--short", "-q", "HEAD"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 2_000,
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+const prompt = readPrompt().trim();
+const kind = prompt ? classify(prompt) : null;
+
+if (kind) {
+  const text = prompt.replace(EXPLICIT, "").trim().slice(0, 600);
+  if (text) {
+    const stamp = new Date().toISOString();
+    const branch = currentBranch() || "—";
+    const body = text.replace(/\n/g, "\n> ");
+    const entry = `## ${stamp} · ${branch} · ${kind}\n\n> ${body}\n\n`;
+    try {
+      const dir = path.join(projectDir, ".claude", "feedback");
+      fs.mkdirSync(dir, { recursive: true });
+      fs.appendFileSync(path.join(dir, "log.md"), entry, "utf-8");
+    } catch {
+      /* best-effort — never block the prompt */
+    }
+  }
+}
+
+process.exit(0);

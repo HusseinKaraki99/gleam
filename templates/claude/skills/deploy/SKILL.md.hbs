@@ -1,0 +1,77 @@
+---
+name: deploy
+description: Trigger a release workflow via GitHub Actions. Validates branch, CI status, and working tree before deploying.
+user-invocable: true
+allowed-tools: Bash, Read
+argument-hint: "[environment: staging | production]"
+---
+
+# Deploy
+
+Trigger a release deployment for **{{config.displayName}}**. Never deploy by calling cloud provider CLIs directly -- always go through the CI/CD pipeline.
+
+## Steps
+
+### 1. Validate preconditions
+
+```bash
+BRANCH=$(git branch --show-current)
+echo "Current branch: $BRANCH"
+```
+
+```bash
+git status --porcelain
+```
+
+If not on `main` or working tree is dirty, **abort**.
+
+### 2. Verify CI passed
+
+```bash
+gh run list --branch main --limit 3 --json status,conclusion,name,headSha
+```
+
+If the latest run failed or is still running, **abort** and report the failure.
+
+### 3. Determine environment
+
+- If `$ARGUMENTS` is `production`, use production.
+- If `$ARGUMENTS` is `staging` or empty, use staging.
+- If `$ARGUMENTS` is anything else, ask for clarification.
+
+### 4. Confirm with user
+
+Before triggering, display:
+- Environment: staging/production
+- Latest commit: `git log --oneline -1`
+- CI status: pass/fail
+- Ask for explicit confirmation.
+
+### 5. Trigger deployment
+
+```bash
+gh workflow run release.yml -f environment=$ENVIRONMENT
+```
+
+If `release.yml` does not exist:
+```bash
+gh workflow list --json name,path
+```
+Report available workflows and ask which to trigger.
+
+### 6. Monitor
+
+```bash
+gh run list --workflow=release.yml --limit 1 --json status,conclusion,url
+```
+
+Report the run URL so the user can watch progress.
+
+## Rules
+
+- Never deploy from a feature branch.
+- Never deploy with uncommitted changes.
+- Never deploy if CI is failing.
+- Default environment is `staging` if not specified.
+- Production deploys require explicit user confirmation.
+- Never use cloud provider CLIs directly (no `fly deploy`, `aws deploy`, `gcloud deploy`).

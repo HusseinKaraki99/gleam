@@ -1,0 +1,15 @@
+{
+  "name": "gleam",
+  "owner": { "name": "Hussein Karaki" },
+  "metadata": {
+    "description": "Gleam — the AI-native monorepo generator for Claude Code.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "gleam",
+      "source": "./",
+      "description": "Generate production-ready monorepos pre-configured for Claude Code. Run /init-project to scaffold."
+    }
+  ]
+}

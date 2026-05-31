@@ -1,0 +1,284 @@
+# {{config.displayName}}
+
+## Starting a fresh session
+
+Run `/start-session` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+{{config.description}} This is a {{config.teamSize}}-team project{{#ifEquals config.teamSize "solo"}} built by a solo developer{{/ifEquals}}{{#ifEquals config.teamSize "small"}} built by a small team{{/ifEquals}}{{#ifEquals config.teamSize "team"}} built by a mid-size team{{/ifEquals}}{{#ifEquals config.teamSize "large"}} built by a large engineering team{{/ifEquals}} using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in `libs/`.{{#ifMultiTenancy config}} Multi-tenancy is implemented via {{config.multiTenancy}} isolation.{{/ifMultiTenancy}}{{#ifI18n config}} Internationalization is enabled with locales: {{join config.i18n.locales ", "}}.{{/ifI18n}}
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+{{#each config.frontend.apps}}
+| Frontend ({{this.name}}) | {{#ifEquals this.type "next-ssr"}}Next.js 15 (App Router, RSC, Server Actions){{/ifEquals}}{{#ifEquals this.type "vite-spa"}}Vite + React 19 (SPA){{/ifEquals}} |
+{{/each}}
+{{#each config.backend.services}}
+| Backend ({{this.name}}) | {{#ifEquals this.type "nestjs"}}NestJS 11 (Node.js){{/ifEquals}}{{#ifEquals this.type "go"}}Go (Chi, hexagonal architecture){{/ifEquals}}{{#ifEquals this.type "dotnet"}}ASP.NET Core (.NET 9){{/ifEquals}} |
+{{/each}}
+{{#if config.mobile.enabled}}
+| Mobile | Expo (React Native) |
+{{/if}}
+{{#ifEquals config.database.type "postgres"}}
+| Database | PostgreSQL |
+{{/ifEquals}}
+{{#ifEquals config.database.type "sqlite"}}
+| Database | SQLite |
+{{/ifEquals}}
+{{#ifHasStack config "drizzle"}}
+| ORM (Node.js) | Drizzle |
+{{/ifHasStack}}
+{{#ifHasStack config "sqlc"}}
+| ORM (Go) | sqlc |
+{{/ifHasStack}}
+{{#ifHasStack config "ef-core"}}
+| ORM (.NET) | Entity Framework Core |
+{{/ifHasStack}}
+{{#ifEquals config.auth "clerk"}}
+| Auth | Clerk |
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+| Auth | Auth0 |
+{{/ifEquals}}
+{{#ifEquals config.auth "custom"}}
+| Auth | Custom (JWT) |
+{{/ifEquals}}
+| API style | {{upperCase config.apiStyle}} |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | {{#ifEquals config.hosting "vercel-fly"}}Vercel + Fly.io{{/ifEquals}}{{#ifEquals config.hosting "aws"}}AWS{{/ifEquals}}{{#ifEquals config.hosting "gcp"}}GCP{{/ifEquals}}{{#ifEquals config.hosting "self-hosted"}}Self-hosted{{/ifEquals}} |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| `CLAUDE.md` (this file) | Always loaded -- project-wide constitution |
+{{#ifHasStack config "next-ssr"}}
+| `.claude/rules/frontend.md` | `apps/*/src/**/*.{ts,tsx}` -- React / Next.js rules |
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+| `.claude/rules/frontend.md` | `apps/*/src/**/*.{ts,tsx}` -- React / Vite rules |
+{{/ifHasStack}}
+{{#ifHasStack config "nestjs"}}
+| `.claude/rules/backend-node.md` | `apps/*/src/**/*.ts` -- NestJS rules |
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+| `.claude/rules/backend-go.md` | `services/**/*.go` -- Go rules |
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+| `.claude/rules/backend-dotnet.md` | `apps/**/*.cs` -- .NET rules |
+{{/ifHasStack}}
+{{#ifHasStack config "postgres"}}
+| `.claude/rules/database.md` | `db/**/*` -- Database & migration rules |
+{{/ifHasStack}}
+{{#if config.mobile.enabled}}
+| `.claude/rules/mobile.md` | `apps/mobile/**/*.{ts,tsx}` -- Expo / React Native rules |
+{{/if}}
+| `.claude/rules/testing.md` | `**/*.{test,spec}.{ts,tsx,go}` -- Testing rules |
+{{#if config.hasFrontend}}
+| `.claude/rules/design-system.md` | `packages/ui/**`, `packages/design-tokens/**`, `*/components/**` -- Design system rules |
+{{/if}}
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in `libs/`. Each lib has a barrel `index.ts`.
+- Import from libs using workspace aliases (`@{{config.name}}/lib-name`), never relative `../` paths.
+{{#if config.isPolyglot}}
+- Go services and Node.js apps communicate only via APIs, never via shared code.
+{{/if}}
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: `foo.ts` -> `foo.test.ts`, `foo.go` -> `foo_test.go`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via `.env` (gitignored) and `.env.example` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+{{#ifEquals config.auth "clerk"}}
+- Auth is handled by Clerk. Never roll custom auth middleware.
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+- Auth is handled by Auth0. Never roll custom JWT verification.
+{{/ifEquals}}
+
+### Commits
+- Use **Conventional Commits**: `type(scope): message`
+- Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `perf`
+- Scope = app or lib name (e.g., `feat(web): add dashboard page`)
+- Never skip pre-commit hooks (`--no-verify` is forbidden).
+
+{{#ifMultiTenancy config}}
+### Multi-tenancy
+- Tenancy model: **{{config.multiTenancy}}**
+{{#ifEquals config.multiTenancy "row-level"}}
+- Every DB table that holds tenant data **must** have a `tenant_id` column.
+- Every query against tenant data **must** filter by `tenant_id`. No exceptions.
+- Never expose data across tenant boundaries. Test with multiple tenants.
+{{/ifEquals}}
+{{#ifEquals config.multiTenancy "schema"}}
+- Each tenant gets its own database schema. Migrations run per-schema.
+- The `public` schema holds system-level tables only.
+- Connection pooling must be schema-aware. Test schema isolation.
+{{/ifEquals}}
+
+{{/ifMultiTenancy}}
+{{#ifI18n config}}
+### Internationalization
+- All user-facing strings go through the i18n system. Never hard-code UI text.
+- Supported locales: {{join config.i18n.locales ", "}}
+- Translation keys use dot notation: `feature.component.label`
+- New features must include translations for all supported locales.
+
+{{/ifI18n}}
+## Project lifecycle
+
+This project follows a phased approach. Check `PROJECT_STATUS.md` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | `/discover`, `/research` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | `/spec`, `/plan-feature` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | `/adr`, `/plan-review` | ADRs for key decisions, schema finalized |
+| **Development** | `/new-feature`, `/commit`, `/self-review` | Acceptance criteria met, tests passing |
+| **Review** | `/self-review`, `/design-review`, `/sync-docs` | All gates passed, docs in sync |
+| **Deployment** | `/deploy`, `/local-setup doctor` | Staging verified, monitoring configured |
+
+Run the `phase-gate` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run `/discover` to validate the product idea and gather requirements
+2. Run `/research <competitor>` to understand the competitive landscape
+3. Run `/spec <feature>` for each MVP feature
+4. Run `/plan-feature <feature>` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run `/discover` and `/research` before writing specs.
+2. **Spec before code.** Run `/spec` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run `/sync-docs` to keep everything in sync.
+8. **Log sessions.** After meaningful work, `/sync-docs` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run `/iterate <component>` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update `.claude/rules/design-system.md`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant `.claude/rules/` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| `/start-session` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| `/discover` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| `/research <topic>` | Discovery | Deep competitive and technical research on a topic. |
+| `/spec <feature>` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| `/plan-feature <feature>` | Specification | Break a spec into implementable tasks with dependencies. |
+| `/adr <decision>` | Architecture | Create an Architecture Decision Record. |
+| `/plan-review` | Architecture | Challenge a plan with engineering rigor. |
+| `/new-feature <name>` | Development | Scaffold a new feature across the relevant stack(s). |
+| `/commit` | Development | Stage, validate, and create a conventional commit. |
+| `/self-review` | Review | Run comprehensive self-review on current changes. |
+| `/iterate <component>` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| `/sync-docs` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| `/local-setup` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| `/deploy` | Deployment | Trigger a release workflow. |
+{{#if config.hasFrontend}}
+| `/design-review` | Review UI changes against the design system quality bar. |
+| `/figma-sync` | Sync components/tokens between code and Figma. |
+| `/figma-implement` | Implement a Figma design as production code. |
+{{/if}}
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| `product-analyst` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| `phase-gate` | sonnet | Validates phase completeness before transitions |
+| `architect` | opus | Designing features, making architectural decisions |
+| `code-reviewer` | opus | Reviewing PRs and code changes |
+| `security-auditor` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| `test-writer` | sonnet | Generating tests for existing or new code |
+| `performance-analyst` | sonnet | N+1 detection, bundle analysis, API profiling |
+| `refactoring-specialist` | sonnet | Systematic refactors with test gates |
+{{#ifHasStack config "next-ssr"}}
+| `react-architect` | sonnet | React component design, RSC patterns, hooks |
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+| `react-architect` | sonnet | React component design, state management, hooks |
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+| `go-expert` | sonnet | Go concurrency, error handling, performance |
+{{/ifHasStack}}
+{{#if config.hasFrontend}}
+| `design-reviewer` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+{{/if}}
+
+## Forbidden actions
+
+- **NEVER** run `git push --force` to `main` or `master`.
+- **NEVER** run `rm -rf /`, `rm -rf ~`, or `rm -rf .` outside of `node_modules`/`dist`.
+- **NEVER** modify `.env` files directly. Only modify `.env.example`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit `node_modules`, `dist`, `.next`, or build artifacts.
+- **NEVER** use `any` in TypeScript. Use `unknown` and narrow.
+- **NEVER** skip the pre-commit hook with `--no-verify`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+{{#if config.hasFrontend}}
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from `{{config.org}}/design-tokens`.
+- **NEVER** use inline `style=\{{}}` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+{{/if}}

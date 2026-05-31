@@ -1,0 +1,305 @@
+---
+name: discover
+description: "Product discovery — guided requirements gathering with competitive research. Run this before writing any code."
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit, WebSearch, WebFetch, AskUserQuestion, Agent
+---
+
+# Product Discovery
+
+Run this as the **first step** after `/start-session` on a new project. This skill acts as a senior product manager, guiding you through structured requirements gathering for **{{config.displayName}}**.
+
+The output is a production-quality PRD at `docs/product/PRD.md`.
+
+## Before starting
+
+1. Check if `docs/product/PRD.md` already exists.
+   - If it does, ask the user: "A PRD already exists. Do you want to start fresh or refine the existing one?"
+   - If refining, read the existing PRD and skip already-answered sections.
+2. Create the `docs/product/` directory if it does not exist.
+
+## Discovery process
+
+Work through each category sequentially. For each category:
+1. Ask the user the questions listed.
+2. Listen carefully and ask follow-up questions to fill gaps.
+3. After the user answers, use **WebSearch** to research the space and present relevant findings.
+4. Summarize what you learned before moving to the next category.
+
+Do NOT rush. Spend real time on each category. Ask at least 2-3 follow-up questions per category based on what the user says.
+
+---
+
+### Category 1: Problem & Users
+
+Ask the user:
+- "What problem are you solving? Describe it in one or two sentences."
+- "Who are your target users? Be specific -- job title, company size, demographics, behavior patterns."
+- "What pain point does this address? How severe is it (inconvenience vs. hair-on-fire)?"
+- "How do your users solve this problem today? What tools or workarounds do they use?"
+- "How did you discover this problem? Personal experience, user research, market observation?"
+
+Follow-up areas to probe:
+- How often do users encounter this problem? (Daily, weekly, occasionally?)
+- What is the cost of the problem? (Time wasted, money lost, frustration?)
+- Are there user segments with different severity levels?
+
+After the user responds, use **WebSearch** to research:
+- The problem space and how it is discussed online
+- Forums, Reddit threads, or Hacker News posts where people complain about this problem
+- Existing solutions and their limitations
+
+Present a brief summary of your research findings to the user.
+
+---
+
+### Category 2: Value Proposition
+
+Ask the user:
+- "Why would users choose your solution over what they do today?"
+- "What is the unique angle or insight that makes your approach better?"
+- "Can you describe the 'aha moment' -- the point where a user realizes this is valuable?"
+- "Is this a vitamin (nice to have) or a painkiller (must have)? Why?"
+
+Follow-up areas to probe:
+- What would a user say to recommend this to a colleague?
+- What is the one thing this does better than anything else?
+- Is the value proposition defensible long-term?
+
+After the user responds, use **WebSearch** to research:
+- Direct and indirect competitors
+- How competitors position themselves
+- Pricing pages and feature comparisons of similar products
+
+Use **WebFetch** to pull and analyze 2-3 competitor landing pages. Note:
+- How they describe the problem
+- What features they highlight
+- What pricing models they use
+- What gaps or complaints users have about them
+
+Present a competitive landscape summary to the user.
+
+---
+
+### Category 3: Core User Flows
+
+Ask the user:
+- "Walk me through the 3-5 most important things a user does in your product. Start from the very first interaction."
+- For each flow:
+  - "What triggers this flow? What is the user trying to accomplish?"
+  - "What are the steps? Walk me through it screen by screen."
+  - "What does success look like? How does the user know they are done?"
+  - "What can go wrong? What errors or edge cases exist?"
+
+Follow-up areas to probe:
+- What is the most common flow? (The one 80% of users do every day)
+- What is the most complex flow? (The one that takes the most steps)
+- Are there flows that involve multiple users or roles?
+- What happens at the boundaries between flows?
+
+After the user responds, use **WebSearch** to research:
+- UX patterns for similar flows in other products
+- Best practices for the types of interactions described
+
+Summarize how other products handle similar flows and note any patterns worth adopting.
+
+---
+
+### Category 4: Business Model
+
+Ask the user:
+- "How does this make money? Or is it an internal tool / open-source project?"
+- "What is the pricing model? (SaaS subscription, usage-based, freemium, one-time, enterprise license?)"
+- "Is there a free tier? What is included? What is the upgrade trigger?"
+- "Who is the buyer? (Is the user the buyer, or is there a separate decision-maker?)"
+- "What is the expected price range? Have you validated willingness to pay?"
+
+Follow-up areas to probe:
+- What is the lifetime value of a customer?
+- What are the unit economics? (Cost to serve one user)
+- Are there revenue streams beyond the core product? (Marketplace, integrations, data?)
+- What is the competitive pricing landscape?
+
+After the user responds, use **WebSearch** to research:
+- Pricing models of similar products
+- Industry benchmarks for the business model type
+
+Present relevant pricing research and comparisons.
+
+---
+
+### Category 5: Scope & MVP
+
+Ask the user:
+- "What is the smallest thing you can ship that proves the idea works?"
+- "If you could only build 3 features, which 3 would they be?"
+- "What is explicitly OUT of scope for version 1? What will you NOT build?"
+- "What is the one metric that tells you the MVP was successful?"
+- "How long do you have to ship the MVP? What is the deadline?"
+
+Follow-up areas to probe:
+- Is there a difference between the MVP and a prototype/demo?
+- What can be manual or semi-automated in V1?
+- What technical shortcuts are acceptable for V1?
+- What would make you decide to pivot or kill the project?
+
+After the user responds, validate the scope:
+- Is the MVP genuinely minimal? Push back if it is too large.
+- Are the out-of-scope items clear enough to prevent scope creep?
+- Does the MVP test the core value proposition?
+
+---
+
+### Category 6: Constraints
+
+Ask the user:
+- "What is your budget? (Development budget, infrastructure budget, ongoing costs)"
+- "What is your timeline? (Hard deadline? Flexible?)"
+- "What is your team? (Solo? 2-3 developers? Larger team?)"
+- "Are there regulatory or compliance requirements? (GDPR, HIPAA, SOC 2, PCI, etc.)"
+- "Are there technical constraints? (Must use a specific tech stack? Existing systems to integrate with?)"
+
+Follow-up areas to probe:
+- Are there platform constraints? (Must support mobile? Offline? Specific browsers?)
+- Are there data residency requirements?
+- Are there accessibility requirements beyond baseline WCAG?
+- Are there performance requirements? (Latency, throughput, concurrent users)
+
+---
+
+### Category 7: Success Metrics
+
+Ask the user:
+- "How do you measure if this project was successful?"
+- "What are your key performance indicators (KPIs)?"
+- "What are your targets for each KPI in the first 3 months?"
+- "How will you track these metrics? (Analytics, surveys, manual?)"
+- "What would make you consider this a failure?"
+
+Follow-up areas to probe:
+- Are there leading indicators you can track before the lagging KPIs show results?
+- What is the expected user acquisition channel?
+- What are realistic benchmarks given your market and stage?
+
+---
+
+## Generate the PRD
+
+After completing all 7 categories, synthesize everything into a structured PRD document.
+
+Create `docs/product/PRD.md` with this structure:
+
+```markdown
+# Product Requirements Document: {{config.displayName}}
+
+_Generated: [today's date]_
+_Status: Draft_
+
+## 1. Problem Statement
+
+[2-3 paragraph description of the problem, target users, and current pain point]
+
+### Target Users
+
+| Segment | Description | Pain severity | Current workaround |
+|---------|-------------|---------------|-------------------|
+| ... | ... | ... | ... |
+
+## 2. Value Proposition
+
+**One-liner**: [One sentence value proposition]
+
+**Key differentiators**:
+1. ...
+2. ...
+3. ...
+
+**Aha moment**: [Description of when users realize the value]
+
+## 3. Competitive Landscape
+
+| Competitor | Strengths | Weaknesses | Our advantage |
+|-----------|-----------|------------|---------------|
+| ... | ... | ... | ... |
+
+### Key insights from competitive research
+- ...
+
+## 4. Core User Flows
+
+### Flow 1: [Name]
+**Trigger**: ...
+**Steps**:
+1. ...
+**Success state**: ...
+**Error cases**: ...
+
+[Repeat for each flow]
+
+## 5. Business Model
+
+**Model**: [Pricing model type]
+**Pricing**: [Pricing details]
+**Free tier**: [What is included / not included]
+**Buyer**: [Who makes the purchase decision]
+
+## 6. MVP Scope
+
+### In scope (V1)
+1. [Feature] — [Why it is essential]
+2. ...
+3. ...
+
+### Explicitly out of scope (V1)
+1. [Feature] — [Why it is deferred]
+2. ...
+
+### MVP success metric
+[The one metric that proves the MVP worked]
+
+## 7. Constraints
+
+| Constraint | Detail |
+|-----------|--------|
+| Budget | ... |
+| Timeline | ... |
+| Team | ... |
+| Regulatory | ... |
+| Technical | ... |
+
+## 8. Success Metrics
+
+| KPI | Target (3 months) | Tracking method |
+|-----|-------------------|-----------------|
+| ... | ... | ... |
+
+### Failure criteria
+[What would make this a failure]
+
+## 9. Open Questions
+
+- [Questions that still need answers]
+
+## 10. References
+
+- [Links to competitor sites, research, articles found during discovery]
+```
+
+## After generating the PRD
+
+1. Present the PRD to the user and ask for feedback.
+2. Incorporate any corrections or additions.
+3. Save key decisions to memory:
+   - The core value proposition
+   - The MVP scope boundaries (in/out)
+   - Key constraints
+   - The primary success metric
+
+## Rules
+
+- Never skip a category. If the user says "I don't know" for a section, note it as an open question and move on.
+- Always do competitive research. The user's knowledge of the market is one perspective -- supplement it with data.
+- Push back gently on scope. If the MVP sounds like a V3, say so.
+- Be specific. "Users" is not a user segment. "Marketing managers at B2B SaaS companies with 50-200 employees" is.
+- Ask one category at a time. Do not dump all 7 categories at once.
+- The PRD is a living document. Note that it will be refined as specs are written.

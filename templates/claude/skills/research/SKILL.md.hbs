@@ -1,0 +1,173 @@
+---
+name: research
+description: "Research competitors, market, and technical approaches for a feature or domain."
+user-invocable: true
+allowed-tools: Bash, Read, Write, WebSearch, WebFetch, Agent
+argument-hint: "<topic>"
+---
+
+# Research
+
+Conduct deep competitive and technical research on a topic for **{{config.displayName}}**.
+
+## Input
+
+Parse `$ARGUMENTS` for the research topic. If no arguments are provided, ask the user what they want to research.
+
+The topic can be:
+- A feature (e.g., "real-time notifications", "role-based access control")
+- A domain (e.g., "marketplace payments", "document collaboration")
+- A technology (e.g., "WebSocket vs SSE", "vector search databases")
+- A competitor (e.g., "how Notion handles permissions")
+
+## Before starting
+
+1. Check if `docs/research/` exists. Create it if not.
+2. Check if a research document already exists for this topic:
+   ```bash
+   ls docs/research/ 2>/dev/null
+   ```
+   If a previous document exists for the same or similar topic, read it and build on it rather than starting from scratch.
+
+## Research process
+
+### Phase 1: Landscape scan
+
+Use **WebSearch** to find a broad set of sources. Run at least 5 distinct searches:
+
+1. **"[topic] best practices"** — Industry-standard approaches
+2. **"[topic] implementation guide"** — Technical how-to content
+3. **"[topic] comparison"** or **"[topic] vs"** — Trade-off discussions
+4. **"[topic] open source"** — OSS implementations to learn from
+5. **"[topic] [industry/domain] case study"** — Real-world usage
+
+For each search, review the top results and note the most relevant sources.
+
+### Phase 2: Deep dives
+
+Use **WebFetch** to pull full content from the 5-10 most valuable sources found in Phase 1. For each source:
+- Extract key insights, patterns, and recommendations
+- Note the context (who wrote it, what product, what scale)
+- Identify any contradictions or debates between sources
+
+Focus on:
+- **How other platforms implement this** — Specific technical approaches, architecture patterns, data models
+- **Best practices and common patterns** — What the industry has converged on, what is considered standard
+- **Technical approaches and trade-offs** — Performance vs. simplicity, build vs. buy, different architectural styles
+- **User experience patterns** — How users expect this to work, common UX conventions, accessibility considerations
+- **Open-source implementations** — GitHub repos, libraries, frameworks that solve this problem. Note stars, maintenance status, and approach
+
+### Phase 3: Synthesis
+
+After gathering data, synthesize findings into actionable insights:
+
+1. **Identify the dominant approach** — What do most successful implementations do?
+2. **Note the contrarian approaches** — What do some do differently, and why?
+3. **Find the failure modes** — What goes wrong most often?
+4. **Extract applicable patterns** — What can be adopted for {{config.displayName}}?
+5. **List the open questions** — What needs further investigation or a prototype?
+
+## Output
+
+Create `docs/research/<topic-kebab-case>.md` with this structure:
+
+```markdown
+# Research: [Topic]
+
+_Date: [today's date]_
+_Researcher: Claude_
+_Project: {{config.displayName}}_
+
+## Executive Summary
+
+[3-5 sentence overview of findings and primary recommendation]
+
+## Competitive Analysis
+
+### [Competitor/Platform 1]
+- **How they do it**: [Description of their approach]
+- **What works well**: [Strengths]
+- **What does not work**: [Weaknesses or complaints]
+- **Technical approach**: [Architecture, stack, patterns if known]
+- **Source**: [URL]
+
+### [Competitor/Platform 2]
+[Same structure]
+
+[Repeat for 3-5 competitors/platforms]
+
+## Technical Approaches
+
+### Approach A: [Name]
+- **Description**: [How it works]
+- **Used by**: [Who uses this approach]
+- **Pros**: [Benefits]
+- **Cons**: [Drawbacks]
+- **Complexity**: S / M / L
+- **Best when**: [Situations where this approach excels]
+
+### Approach B: [Name]
+[Same structure]
+
+[Repeat for 2-4 approaches]
+
+## UX Patterns
+
+- [Pattern 1]: [Description and where it is used]
+- [Pattern 2]: [Description and where it is used]
+
+### Common user expectations
+- [What users expect based on industry conventions]
+
+### Anti-patterns to avoid
+- [What frustrates users in existing implementations]
+
+## Open-Source References
+
+| Repository | Stars | Last updated | Approach | Notes |
+|-----------|-------|-------------|----------|-------|
+| [repo URL] | ... | ... | ... | ... |
+
+## Recommendations for {{config.displayName}}
+
+### Primary recommendation
+[What to do and why]
+
+### Alternative if constraints change
+[What to do if budget, timeline, or requirements shift]
+
+### What to avoid
+[Approaches that are tempting but wrong for this context]
+
+## Key Takeaways
+
+1. [Most important finding]
+2. [Second most important finding]
+3. [Third most important finding]
+
+## Open Questions
+
+- [Questions that need team discussion or prototyping]
+
+## Sources
+
+1. [URL] — [Brief description of what this source covered]
+2. ...
+```
+
+## After generating the document
+
+1. Present a brief summary of the top 3 findings to the user.
+2. Ask if any area needs deeper investigation.
+3. Save the primary recommendation to memory for reference in future conversations.
+
+## Rules
+
+- Always search. Never rely solely on training data for competitive or market information.
+- Use **WebFetch** on at least 3 sources to get deep, specific content. Do not rely only on search snippets.
+- Be specific about sources. Include URLs for every claim about a competitor or platform.
+- Separate facts from opinions. Label speculation as such.
+- Note the date of sources. A 2020 blog post about best practices may be outdated.
+- If the topic is too broad, split it into sub-topics and ask the user which to focus on first.
+- Do not make technology recommendations without understanding the project's constraints. Reference the PRD if it exists.
+- If the research reveals that the feature is more complex than expected, flag this explicitly.

@@ -1,0 +1,20 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database={{kebabCase name}};Username=postgres;Password=postgres"
+  },
+  "Serilog": {
+    "Using": ["Serilog.Sinks.Console"],
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft.AspNetCore": "Warning",
+        "Microsoft.EntityFrameworkCore": "Warning"
+      }
+    },
+    "WriteTo": [
+      { "Name": "Console" }
+    ],
+    "Enrich": ["FromLogContext", "WithMachineName", "WithThreadId"]
+  },
+  "AllowedHosts": "*"
+}

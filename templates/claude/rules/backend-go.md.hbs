@@ -1,0 +1,97 @@
+---
+globs: "services/**/*.go"
+---
+
+# Backend Go Rules
+
+## Hexagonal architecture
+
+Every Go service follows hexagonal (ports & adapters) architecture:
+
+```
+services/<name>/
+  domain/          -- Pure business types and errors. ZERO external imports.
+    models.go
+    errors.go
+  ports/           -- Interfaces (driven + driving). Import domain only.
+    repository.go
+    service.go
+  usecase/         -- Business logic. Imports domain + ports.
+    usecase.go
+    usecase_test.go
+  adapters/
+    http/          -- HTTP handler (driving adapter). Imports ports.
+      handler.go
+      handler_test.go
+      middleware.go
+    postgres/      -- DB adapter (driven adapter). Imports domain + ports.
+      repository.go
+      repository_test.go
+    grpc/          -- gRPC adapter (if needed)
+  service.go       -- Wiring / main entry point
+  service_test.go
+```
+
+### Layer rules
+
+- **domain/**: No imports from other layers. No third-party imports. Pure Go + stdlib only.
+- **ports/**: Interfaces only. May import `domain/`.
+- **usecase/**: Implements business logic via port interfaces. May import `domain/` and `ports/`.
+- **adapters/**: Implement port interfaces. May import `domain/` and `ports/`. Never import `usecase/`.
+
+## Module boundaries
+
+- Each service is an independent Go module with its own `go.mod`.
+- Services communicate via APIs (HTTP/gRPC), never via shared Go packages.
+- Shared Go code (if any) lives in `libs/go/` as a separate module.
+
+## Error handling
+
+- Use typed domain errors: `var ErrNotFound = errors.New("not found")`.
+- Wrap errors with context: `fmt.Errorf("fetching user %s: %w", id, err)`.
+- Never ignore returned errors. If intentionally ignoring, assign to `_` with a comment.
+- Adapters translate domain errors to transport errors (e.g., `ErrNotFound` -> 404).
+- Never use `panic` for expected error conditions. Reserve `panic` for programmer bugs.
+
+## Context propagation
+
+- Every public function accepts `context.Context` as the first parameter.
+- Pass context through the entire call chain. Never store context in structs.
+- Use context for cancellation, deadlines, and request-scoped values (trace ID, tenant ID).
+{{#ifMultiTenancy config}}
+- Tenant ID must be extracted from context in every data access layer call.
+{{/ifMultiTenancy}}
+
+## Naming conventions
+
+- Packages: short, lowercase, no underscores (e.g., `usecase`, not `use_case`).
+- Interfaces: verb-noun or noun (e.g., `UserRepository`, `Authenticator`). No `I` prefix.
+- Exported types: `PascalCase`. Unexported: `camelCase`.
+- Test files: `<name>_test.go` in the same package (white-box) or `<name>_test` package (black-box).
+- Constructor functions: `New<Type>(...)`.
+
+## Testing
+
+- **Unit tests**: `testify/assert` + `testify/require` for assertions.
+- **Integration tests**: `testcontainers-go` for database tests.
+- Table-driven tests for functions with multiple input/output combinations.
+- Test function naming: `Test<Function>_<Scenario>` (e.g., `TestCreateUser_DuplicateEmail`).
+- Use `t.Parallel()` where safe. Tests must not depend on execution order.
+- Mock interfaces, not implementations. Use `testify/mock` or hand-written fakes.
+
+## Performance
+
+- Use `sync.Pool` for frequently allocated objects.
+- Prefer `strings.Builder` over `fmt.Sprintf` for string concatenation in hot paths.
+- Use `errgroup` for concurrent operations with proper error collection.
+- Profile before optimizing. Use `pprof` for CPU and memory profiling.
+
+## Forbidden patterns
+
+- `init()` functions -- use explicit initialization in `main` or constructor.
+- Global mutable state -- pass dependencies explicitly.
+- `interface{}` / `any` in domain types -- use concrete types or generics.
+- Bare `go` statements without error handling -- use `errgroup`.
+- `time.Sleep` in production code -- use `time.Ticker` or `context.WithTimeout`.
+- `log.Fatal` outside of `main` -- return errors to the caller.
+- Shared mutable state without synchronization primitives.

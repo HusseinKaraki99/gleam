@@ -1,0 +1,25 @@
+node_modules/
+# Ship the bundled engine inside the plugin; ignore the rest of the build output.
+dist/*
+!dist/gleam.mjs
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Test
+coverage/
+
+# Generated test outputs
+tests/snapshots/**/output/

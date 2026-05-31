@@ -1,0 +1,125 @@
+# Claude Code Setup -- {{config.displayName}}
+
+This project is configured for AI-agent-optimized development with Claude Code. Every rule, agent, skill, and hook is tailored to the project's tech stack.
+
+## What's included
+
+### CLAUDE.md (project root)
+
+The project constitution. Read by Claude at the start of every session. Defines:
+- Module boundaries and import rules
+- File size limits (250 TS, 400 Go, 300 C#)
+- Naming conventions per stack
+- Security requirements
+- Workflow rules (read before writing, plan before coding)
+- Token-efficiency rules
+- Forbidden actions
+{{#ifMultiTenancy config}}
+- Multi-tenancy rules ({{config.multiTenancy}} isolation)
+{{/ifMultiTenancy}}
+{{#ifI18n config}}
+- Internationalization rules ({{join config.i18n.locales ", "}})
+{{/ifI18n}}
+
+### Rules (`.claude/rules/`)
+
+Path-scoped rules that auto-load when Claude edits matching files:
+
+| Rule | Glob | Purpose |
+|------|------|---------|
+{{#ifHasStack config "next-ssr"}}
+| `frontend.md` | `apps/*/src/**/*.{ts,tsx}` | React / Next.js component patterns, RSC rules |
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+| `frontend.md` | `apps/*/src/**/*.{ts,tsx}` | React / Vite component patterns |
+{{/ifHasStack}}
+{{#ifHasStack config "nestjs"}}
+| `backend-node.md` | `apps/*/src/**/*.ts` | NestJS module pattern, validation, error handling |
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+| `backend-go.md` | `services/**/*.go` | Go hexagonal architecture, error handling, concurrency |
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+| `backend-dotnet.md` | `apps/**/*.cs` | ASP.NET Core feature folders, DI, EF Core |
+{{/ifHasStack}}
+{{#ifEquals config.database.type "postgres"}}
+| `database.md` | `db/**/*` | Migration discipline, schema standards, indexes |
+{{/ifEquals}}
+| `testing.md` | `**/*.{test,spec}.{ts,tsx,go}` | Test conventions, coverage gates, naming |
+{{#if config.mobile.enabled}}
+| `mobile.md` | `apps/mobile/**/*.{ts,tsx}` | Expo / React Native patterns |
+{{/if}}
+
+### Agents (`.claude/agents/`)
+
+Specialist sub-agents for delegated work:
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| `architect` | opus | Feature design, architectural decisions, implementation plans |
+| `code-reviewer` | opus | Structured PR review with severity-grouped findings |
+| `security-auditor` | sonnet | OWASP Top 10 audits, auth flow analysis, secrets scanning |
+| `test-writer` | sonnet | Generate tests per stack, refuse untestable code |
+| `performance-analyst` | sonnet | N+1 detection, bundle analysis, API profiling |
+| `refactoring-specialist` | sonnet | Systematic refactors with test gates at each step |
+{{#ifHasStack config "next-ssr"}}
+| `react-architect` | sonnet | React component design, RSC patterns, state management |
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+| `react-architect` | sonnet | React component design, hooks patterns, state management |
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+| `go-expert` | sonnet | Go concurrency, error handling, performance optimization |
+{{/ifHasStack}}
+
+### Skills (`.claude/skills/`)
+
+Reusable workflows invoked via `/command`:
+
+| Skill | Description |
+|-------|-------------|
+| `/start-session` | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| `/self-review` | Comprehensive pre-PR review: sanity gates + deep file review. |
+| `/commit` | Conventional commit with secrets scanning and format validation. |
+| `/new-feature <name>` | Scaffold a feature module across all relevant stacks. |
+| `/local-setup [mode]` | Bootstrap, doctor, or reset the dev environment. |
+| `/deploy [env]` | Trigger release workflow via GitHub Actions. |
+| `/adr <title>` | Create an Architecture Decision Record in `docs/adr/`. |
+| `/sync-docs` | Sync SESSION_LOG + NEXT_STEPS + CLAUDE.md after decisions. |
+| `/plan-review` | Challenge a plan with engineering rigor before coding. |
+
+### Hooks (`.claude/hooks/`)
+
+Automated behaviors that run on every session:
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| `format-on-edit.cjs` | PostToolUse (Edit/Write) | Auto-format files after Claude edits them |
+| `block-dangerous-bash.cjs` | PreToolUse (Bash) | Block `rm -rf`, force push, `--no-verify`, global installs |
+| `session-context.cjs` | SessionStart | Inject git state, ticket ID, and welcome message |
+
+### Settings (`.claude/settings.json`)
+
+Project-level Claude Code settings:
+- Hooks wired to the 3 hook scripts above
+- Permission allowlist for safe Bash commands (stack-specific)
+
+### Supporting files
+
+| File | Purpose |
+|------|---------|
+| `welcome-message.md` | Greeting shown at session start with skill quick reference |
+| `hints.txt` | Pool of tips shown randomly at session start |
+
+## For humans
+
+These tools work for human developers too. Type `/` in Claude Code to see available skills. The rules and conventions in `CLAUDE.md` and the path-scoped rules apply to all code in the project, whether written by humans or AI.
+
+### Recommended workflow
+
+1. Start a session: `/start-session`
+2. Plan your work: describe the feature, use the `architect` agent for complex changes
+3. Implement: use `/new-feature` to scaffold, write code following the rules
+4. Review: `/self-review` before pushing
+5. Commit: `/commit` for clean conventional commits
+6. Document: `/sync-docs` to keep project docs current

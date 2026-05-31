@@ -1,0 +1,259 @@
+---
+name: plan-feature
+description: "Create an implementation plan with task breakdown from a feature spec."
+user-invocable: true
+allowed-tools: Bash, Read, Write, Task, Agent
+argument-hint: "<feature-name>"
+---
+
+# Plan Feature
+
+Take a feature spec and create a detailed, ordered implementation plan with task breakdown for **{{config.displayName}}**.
+
+## Input
+
+Parse `$ARGUMENTS` for the feature name. If no arguments are provided, list available specs and ask which to plan:
+
+```bash
+ls docs/specs/ 2>/dev/null
+```
+
+## Before starting
+
+1. Read the feature spec from `docs/specs/<feature-name>.md`. If it does not exist, tell the user and suggest running `/spec <feature-name>` first.
+
+2. Read `CLAUDE.md` for:
+   - Module boundaries and project structure
+   - Naming conventions
+   - Forbidden patterns
+   - Tech stack details
+
+3. Check for prior decisions in `docs/adr/`:
+   ```bash
+   ls docs/adr/ 2>/dev/null
+   ```
+   Read any ADRs relevant to the feature.
+
+4. Check if `docs/plans/` exists. Create it if not.
+
+5. Check if a plan already exists for this feature:
+   ```bash
+   ls docs/plans/ 2>/dev/null
+   ```
+   If updating, read the existing plan and note what has changed.
+
+## Planning process
+
+### Step 1: Analyze the spec
+
+Read the feature spec thoroughly and identify:
+- All data model changes (new tables, new columns, migrations)
+- All API endpoints or procedures
+- All UI screens and components
+- All test requirements
+- All dependencies (on other features, services, infrastructure)
+
+### Step 2: Break down into tasks
+
+Decompose the feature into atomic, implementable tasks. Each task should be:
+- **One reviewable unit** -- completable in a single focused work session
+- **Independently testable** -- can be verified without the other tasks (where possible)
+- **Clear in scope** -- a developer should know exactly what files to create or modify
+
+Group tasks by layer:
+
+#### Database & migrations
+- Schema changes, new tables, indexes, seed data
+- Each migration should be its own task
+{{#ifHasStack config "drizzle"}}
+- Drizzle schema definition and migration generation
+{{/ifHasStack}}
+{{#ifHasStack config "sqlc"}}
+- SQL query definitions and sqlc code generation
+{{/ifHasStack}}
+{{#ifHasStack config "ef-core"}}
+- EF Core entity configuration and migration
+{{/ifHasStack}}
+
+#### Backend (API / business logic)
+{{#ifHasStack config "nestjs"}}
+- NestJS module, controller, service, DTOs, repository
+- Each endpoint can usually be its own task
+{{/ifHasStack}}
+{{#ifHasStack config "go"}}
+- Domain model, ports, use cases, HTTP handlers, repository adapters
+- Follow hexagonal architecture: domain first, then ports, then adapters
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+- Feature folder: controller, service, DTOs, validators, entity
+- Each endpoint or operation is its own task
+{{/ifHasStack}}
+
+#### Frontend (UI / components)
+{{#ifHasStack config "next-ssr"}}
+- Page routes, server components, client components, hooks
+- Work from outer (page) to inner (components)
+{{/ifHasStack}}
+{{#ifHasStack config "vite-spa"}}
+- Route components, feature components, hooks
+- Work from outer (route) to inner (components)
+{{/ifHasStack}}
+{{#if config.mobile.enabled}}
+- Mobile screens, components, navigation
+{{/if}}
+
+#### Shared libraries
+- Types, schemas, utilities that are used by multiple apps
+- These must be built before the apps that depend on them
+
+#### Tests
+- Unit tests alongside each implementation task
+- Integration tests as separate tasks after the layer is complete
+- E2E tests as a final task
+
+### Step 3: Order by dependency
+
+Determine the correct order:
+1. **Shared types and schemas** -- used by everything
+2. **Database migrations** -- backend depends on these
+3. **Backend core logic** -- domain model, then business logic, then API layer
+4. **Frontend components** -- depend on API being available
+5. **Integration tests** -- depend on multiple layers being complete
+6. **E2E tests** -- depend on the full stack
+
+Draw the dependency graph explicitly. If Task B requires Task A, say so.
+
+### Step 4: Estimate complexity
+
+Assign each task a complexity:
+- **S** (Small) -- Boilerplate, straightforward, <1 hour. Examples: DTO, simple component, migration
+- **M** (Medium) -- Some logic, decisions, or edge cases, 1-3 hours. Examples: service with business rules, complex component
+- **L** (Large) -- Significant complexity, multiple concerns, 3-8 hours. Examples: auth flow, real-time feature, complex data pipeline
+
+If any task is **XL** (>8 hours), it must be split further.
+
+### Step 5: Identify parallelism
+
+Determine which tasks can be worked on simultaneously:
+- Tasks with no dependency relationship can be parallelized
+- Backend and frontend work on different endpoints can often be parallelized
+- Tests can be written in parallel with implementation if the interface is defined
+
+### Step 6: Create sub-agent tasks
+
+For each task, use **Task** (TaskCreate) to create a sub-agent task with:
+- Clear title
+- Description of what to implement
+- Files to create or modify
+- Acceptance criteria from the spec
+- Dependencies (which tasks must complete first)
+
+### Step 7: Generate the plan document
+
+Create `docs/plans/<feature-name>.md` with the structure below.
+
+## Output
+
+Create `docs/plans/<feature-name-kebab-case>.md`:
+
+```markdown
+# Implementation Plan: [Feature Name]
+
+_Date: [today's date]_
+_Spec: docs/specs/[feature-name].md_
+_Status: Planning_
+
+## Summary
+
+[1-2 sentence overview of what is being built and estimated total effort]
+
+**Total tasks**: [N]
+**Estimated effort**: [Sum of estimates]
+**Critical path**: [List of tasks that cannot be parallelized]
+
+## Dependency Graph
+
+```
+[shared-types] --> [migration] --> [backend-core] --> [backend-api] --> [integration-tests]
+                                                  \-> [frontend-components] --> [e2e-tests]
+```
+
+## Tasks
+
+### Phase 1: Foundation
+
+#### Task 1.1: [Title]
+- **Complexity**: S / M / L
+- **Depends on**: None
+- **Files**:
+  - Create: `path/to/file.ts`
+  - Modify: `path/to/existing.ts`
+- **Description**: [What to implement]
+- **Acceptance criteria**:
+  - [ ] [Criterion from spec]
+- **Tests**:
+  - [ ] [What to test]
+
+#### Task 1.2: [Title]
+[Same structure]
+
+### Phase 2: Core Implementation
+
+#### Task 2.1: [Title]
+- **Complexity**: M
+- **Depends on**: Task 1.1, Task 1.2
+[Same structure]
+
+[Continue for all phases]
+
+### Phase 3: Frontend
+
+[Tasks]
+
+### Phase 4: Integration & Testing
+
+[Tasks]
+
+## Parallelism Opportunities
+
+| Track A | Track B | Notes |
+|---------|---------|-------|
+| Task 2.1 (backend) | Task 3.1 (frontend types) | Frontend can start with mock data |
+| Task 2.3 (endpoint X) | Task 2.4 (endpoint Y) | Independent endpoints |
+
+## Risks & Mitigations
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| [Risk] | Low/Med/High | Low/Med/High | [What to do] |
+
+## Definition of Done
+
+- [ ] All acceptance criteria from the spec are met
+- [ ] All tasks have passing tests
+- [ ] No lint errors or type errors
+- [ ] Self-review completed (`/self-review`)
+- [ ] Documentation updated if needed
+- [ ] Spec updated if implementation deviated (`/sync-docs`)
+```
+
+## After generating the plan
+
+1. Present the plan summary to the user:
+   - Total tasks and estimated effort
+   - Critical path length
+   - Parallelism opportunities
+2. Ask: "Does this breakdown look right? Any tasks missing or tasks that should be split differently?"
+3. Incorporate feedback.
+4. Save the plan structure to memory for reference during implementation.
+
+## Rules
+
+- Every task must have specific files listed. "Update the backend" is not a task.
+- No task should be larger than L. Split XL tasks.
+- Dependencies must be explicit. Do not assume ordering.
+- The plan must match the spec. If the spec has 4 endpoints, the plan must have tasks for all 4.
+- Include tests as explicit tasks, not afterthoughts.
+- If the spec has open questions, flag them as blockers on the relevant tasks.
+- Do not start implementation. This skill produces only the plan document and sub-agent tasks.
+- If the feature spec is incomplete (missing data model, missing API design), recommend running `/spec` to fill the gaps before planning.

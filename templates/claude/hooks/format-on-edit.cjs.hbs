@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+// PostToolUse hook — auto-format files after Claude edits them.
+// Wired in .claude/settings.json under hooks.PostToolUse for Edit|Write|MultiEdit.
+// Always exits 0 — formatting failures are non-blocking.
+
+const { execFileSync } = require("child_process");
+const path = require("path");
+const fs = require("fs");
+
+let payload = "";
+process.stdin.setEncoding("utf-8");
+process.stdin.on("data", (chunk) => (payload += chunk));
+process.stdin.on("end", () => {
+  let parsed;
+  try {
+    parsed = JSON.parse(payload || "{}");
+  } catch {
+    process.exit(0);
+  }
+
+  const filePath = parsed?.tool_input?.file_path;
+  if (!filePath || typeof filePath !== "string") {
+    process.exit(0);
+  }
+
+  const abs = path.resolve(filePath);
+  if (!fs.existsSync(abs)) {
+    process.exit(0);
+  }
+
+  const ext = path.extname(abs).toLowerCase();
+  const repoRoot = findRepoRoot(abs);
+  if (!repoRoot) process.exit(0);
+  if (!abs.startsWith(repoRoot)) process.exit(0);
+
+  const rel = path.relative(repoRoot, abs);
+  // Skip generated/vendored/build artifacts
+  if (
+    rel.includes("node_modules/") ||
+    rel.includes("/dist/") ||
+    rel.includes("/build/") ||
+    rel.includes("generated/") ||
+    rel.includes(".next/") ||
+    rel.includes("/vendor/") ||
+    rel.includes("/bin/") ||
+    rel.endsWith(".min.js") ||
+    rel.endsWith(".min.css") ||
+    rel.endsWith(".lock") ||
+    rel.endsWith("-lock.json") ||
+    rel.endsWith("-lock.yaml")
+  ) {
+    process.exit(0);
+  }
+
+  try {
+    // TypeScript, JavaScript, JSON, CSS — format with Biome
+    if ([".ts", ".tsx", ".js", ".jsx", ".json", ".css"].includes(ext)) {
+      const biomeBin = path.join(repoRoot, "node_modules/.bin/biome");
+      if (fs.existsSync(biomeBin)) {
+        execFileSync(biomeBin, ["format", "--write", abs], {
+          cwd: repoRoot,
+          stdio: "ignore",
+          timeout: 15_000,
+        });
+      }
+    }
+{{#ifHasStack config "go"}}
+    // Go — format with gofumpt
+    else if (ext === ".go" && hostBinAvailable("gofumpt")) {
+      execFileSync("gofumpt", ["-w", abs], { stdio: "ignore", timeout: 15_000 });
+    }
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+    // C# — format with dotnet format
+    else if (ext === ".cs" && hostBinAvailable("dotnet")) {
+      execFileSync("dotnet", ["format", "--include", abs], {
+        cwd: repoRoot,
+        stdio: "ignore",
+        timeout: 30_000,
+      });
+    }
+{{/ifHasStack}}
+  } catch {
+    // Best-effort: never block Claude's edit on a formatter failure.
+  }
+
+  process.exit(0);
+});
+
+function findRepoRoot(start) {
+  let dir = path.dirname(start);
+  while (dir !== "/") {
+    if (fs.existsSync(path.join(dir, ".git"))) return dir;
+    dir = path.dirname(dir);
+  }
+  return null;
+}
+
+function hostBinAvailable(name) {
+  for (const finder of process.platform === "win32" ? ["where", "which"] : ["which", "where"]) {
+    try {
+      execFileSync(finder, [name], { stdio: "ignore", timeout: 2_000 });
+      return true;
+    } catch { /* try next */ }
+  }
+  try {
+    execFileSync(name, ["--version"], { stdio: "ignore", timeout: 2_000 });
+    return true;
+  } catch {
+    return false;
+  }
+}

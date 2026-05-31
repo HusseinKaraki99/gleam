@@ -1,0 +1,18 @@
+package domain
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type ID = uuid.UUID
+
+func NewID() ID {
+	return uuid.New()
+}
+
+type Timestamps struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

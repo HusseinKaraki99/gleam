@@ -1,0 +1,71 @@
+---
+name: feedback-review
+description: Review captured developer feedback and promote recurring guidance into durable rules. Reads .claude/feedback/log.md, clusters repeated signals, and proposes updates to CLAUDE.md or .claude/rules/. Use periodically to turn corrections into standing behavior.
+user-invocable: true
+allowed-tools: Bash, Read, Edit, Grep
+argument-hint: "[optional: --apply to write promoted rules, otherwise propose only]"
+---
+
+# Feedback Review
+
+The `capture-feedback` hook logs durable developer feedback (explicit `#feedback`
+notes and standing-instruction signals) to `.claude/feedback/log.md`. This skill
+turns that raw log into **learning**: it finds what the developer keeps asking
+for and promotes it into the rules Claude reads every session.
+
+## Step 0 — Load the log
+
+```bash
+test -f .claude/feedback/log.md && cat .claude/feedback/log.md || echo "No feedback captured yet."
+```
+
+If the log is empty or missing, stop and say "No feedback to review."
+
+## Step 1 — Cluster
+
+Group the entries by theme (e.g. testing, naming, git workflow, a specific
+library, file layout). For each cluster note:
+
+- **Theme** — what the feedback is about
+- **Count** — how many times it recurs
+- **Strength** — `explicit` entries weigh more than `signal` entries
+- **Standing rule** — the durable, generalized instruction it implies
+
+Ignore one-off, task-specific notes — only recurring or explicit guidance is
+worth promoting.
+
+## Step 2 — Propose promotions
+
+For each cluster strong enough to promote (recurring, or any `explicit` entry),
+decide where it belongs:
+
+- A cross-cutting behavior → a new bullet in `CLAUDE.md`
+- A stack/domain-specific rule → the matching file in `.claude/rules/`
+
+Output a table:
+
+```
+| Theme | Recurrences | Proposed rule | Destination |
+|-------|-------------|---------------|-------------|
+```
+
+## Step 3 — Apply (only with `--apply`)
+
+If `$ARGUMENTS` contains `--apply`:
+
+1. Edit the destination files to add the promoted rules. Match the surrounding
+   style; keep each rule one line where possible.
+2. Archive the processed entries so they are not re-promoted:
+   ```bash
+   mkdir -p .claude/feedback/archive
+   ts=$(date -u +%Y%m%dT%H%M%SZ)
+   mv .claude/feedback/log.md ".claude/feedback/archive/log-$ts.md"
+   ```
+3. Report exactly which rules were added and which files changed.
+
+Without `--apply`, only propose — change nothing.
+
+## Step 4 — Report
+
+Summarize: how many entries reviewed, how many clusters, what was promoted (or
+proposed), and what was skipped as one-off noise.

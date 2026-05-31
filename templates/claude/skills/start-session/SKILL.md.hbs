@@ -1,0 +1,47 @@
+---
+name: start-session
+description: Onboard a fresh Claude Code session. Reads SESSION_LOG, NEXT_STEPS, and git state to produce a 5-line briefing.
+user-invocable: true
+allowed-tools: Bash, Read
+---
+
+# Start Session
+
+Run this at the beginning of every new Claude Code session for **{{config.displayName}}**.
+
+## Steps
+
+1. Read the **top entry** (latest) from `SESSION_LOG.md` -- what was done last.
+
+2. Read **Section 0: Current Sprint** from `NEXT_STEPS.md` -- what's next.
+
+3. Get git state:
+   ```bash
+   git branch --show-current
+   git status --porcelain=v1 | head -15
+   git log --oneline -5
+   git stash list 2>/dev/null | head -3
+   ```
+
+4. Check for uncommitted work:
+   ```bash
+   git diff --stat HEAD 2>/dev/null | tail -5
+   ```
+
+5. Output a **5-line briefing** in this exact format:
+   ```
+   Branch: <branch> | <clean/N modified/N untracked>
+   Last session: <one-line summary from SESSION_LOG>
+   Next priority: <top item from NEXT_STEPS>
+   Blockers: <any open questions or blockers, or "none">
+   Suggested action: <what to do first>
+   ```
+
+## Rules
+
+- Do NOT pre-read large docs (STRATEGIC_PLAN, TECHNICAL_PLAN, architecture docs, etc.).
+- Do NOT read all of SESSION_LOG -- only the top (most recent) entry.
+- Keep the briefing to exactly 5 lines. Be concise.
+- If SESSION_LOG or NEXT_STEPS don't exist yet, note that and suggest creating them.
+- If there are stashed changes, mention them in the blockers line.
+- If the branch is behind origin/main, suggest rebasing in the action line.

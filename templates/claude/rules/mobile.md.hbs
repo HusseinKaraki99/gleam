@@ -1,0 +1,77 @@
+---
+globs: "apps/mobile/**/*.{ts,tsx}"
+---
+
+# Mobile (Expo / React Native) Rules
+
+## Navigation patterns
+
+- Use **Expo Router** (file-based routing) for all navigation.
+- Route files live in `app/` directory following file-system convention.
+- Use typed routes. Define route params with TypeScript.
+- Deep linking: define URL schemes in `app.json` for every navigable route.
+- Navigation structure:
+  - `app/_layout.tsx` -- root layout (auth gate, providers)
+  - `app/(tabs)/` -- tab navigator
+  - `app/(auth)/` -- auth flow (login, register, forgot password)
+  - `app/[...unmatched].tsx` -- 404 fallback
+
+## Component patterns
+
+- Follow the same feature-based structure as frontend:
+  - `features/<name>/components/`
+  - `features/<name>/hooks/`
+  - `features/<name>/utils/`
+- Shared UI components: `components/ui/`
+- Use `react-native-safe-area-context` for safe area handling. Never hard-code insets.
+- Use `react-native-screens` for native screen containers.
+
+## Platform-specific code
+
+- Prefer cross-platform code. Use platform-specific files only when necessary.
+- Platform files: `Component.ios.tsx`, `Component.android.tsx`.
+- Use `Platform.select()` for minor platform differences (shadows, fonts).
+- Test on both iOS and Android before marking a feature complete.
+
+## Performance considerations
+
+- **FlatList** for all scrollable lists. Never use `ScrollView` for dynamic lists.
+  - Always provide `keyExtractor`.
+  - Use `getItemLayout` for fixed-height items.
+  - Set `windowSize` and `maxToRenderPerBatch` for large lists.
+- **Memoize** expensive components with `React.memo` and expensive computations with `useMemo`.
+- **Images**: use `expo-image` for cached, optimized image loading. Specify dimensions.
+- **Animations**: use `react-native-reanimated` for animations. Run on the UI thread.
+- Avoid inline functions in `renderItem` and event handlers in lists.
+- Monitor re-renders with React DevTools profiler.
+
+## State management
+
+- Server state: `@tanstack/react-query` (same as web frontend).
+- Local state: `useState` / `useReducer`.
+- Persistent state: `expo-secure-store` for sensitive data, `AsyncStorage` for preferences.
+- Never store tokens or credentials in `AsyncStorage` -- use `expo-secure-store`.
+
+## Styling
+
+- Use `StyleSheet.create()` for all styles. Never inline style objects.
+- Design for multiple screen sizes. Use relative units and `Dimensions`.
+- Support both light and dark mode via `useColorScheme`.
+- Touch targets: minimum 44x44 points for all interactive elements.
+
+## Testing
+
+- Unit tests: `vitest` for logic and hooks.
+- Component tests: `@testing-library/react-native`.
+- E2E: Detox or Maestro for critical user flows.
+- Test on physical devices before release.
+
+## Forbidden patterns
+
+- `console.log` in committed code -- use a proper logging service.
+- Inline styles -- use `StyleSheet.create`.
+- `any` type -- use proper TypeScript types.
+- Direct `fetch` calls -- use a configured API client with `react-query`.
+- `setTimeout` for animations -- use `react-native-reanimated` or `Animated`.
+- Hard-coded colors -- use a theme system.
+- Ignoring the notch / safe areas.

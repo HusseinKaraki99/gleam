@@ -1,0 +1,76 @@
+---
+globs: "packages/ui/**/*.{ts,tsx}, packages/design-tokens/**/*.{ts,css}, apps/*/src/components/**/*.{ts,tsx}, apps/*/src/features/*/components/**/*.{ts,tsx}"
+---
+
+# Design System Rules
+
+## Token-first approach
+- **Never hardcode colors, spacing, or typography values.** Use design tokens from `{{config.org}}/design-tokens`.
+- Colors: use CSS variables (`var(--color-primary-9)`) or Tailwind token classes.
+- Spacing: use the spacing scale (`var(--space-4)` or Tailwind `p-4`).
+- Typography: use the type scale (`var(--text-sm)`) or Tailwind text utilities.
+- Border radius: use token radii (`var(--radius-md)`) — never hardcode pixel values.
+
+## Component architecture
+- Every component in `packages/ui/` must export a `ComponentMeta` object alongside the component.
+- ComponentMeta includes: name, description, variants, defaultVariant, slots, accessibilityRole.
+- This metadata enables AI agents to use components correctly without reading implementation.
+- One exported component per file. Internal helpers are fine if under 30 lines.
+
+## Variant-driven design
+- Use `class-variance-authority` (cva) for variant management.
+- Variants are the API — props like `variant`, `size`, `color` map to visual states.
+- Never use conditional class strings directly. Always go through cva.
+
+## Accessibility (WCAG 2.1 AA)
+- Every interactive component must be keyboard navigable.
+- Focus states must use `--color-border-focus` token.
+- Color contrast ratio: 4.5:1 for text, 3:1 for large text and UI elements.
+- Use semantic HTML elements: `<button>`, `<input>`, `<nav>`, not `<div onClick>`.
+- All images need `alt` text. Decorative images use `alt=""`.
+- Screen reader support: use `aria-label` for icon-only buttons.
+
+{{#ifEquals config.design.motionLevel "full"}}
+## Motion
+- Import durations and easings from `{{config.org}}/design-tokens/motion`.
+- Use `motion` library for animations. Never use raw CSS transitions for complex motion.
+- Every animation must respect `prefers-reduced-motion` — wrap in motion's `useReducedMotion()`.
+- Motion should explain state changes, not decorate. If removing the animation doesn't lose information, remove it.
+- Duration guidelines: hover/press = instant (80ms), fade/slide = fast (200ms), page transitions = normal (300ms).
+{{/ifEquals}}
+{{#ifEquals config.design.motionLevel "subtle"}}
+## Motion
+- Use CSS transitions only. No JS animation library.
+- Transitions limited to: opacity, transform, background-color, border-color.
+- Duration: 150ms for hovers, 200ms for state changes. No longer animations.
+- Always respect `prefers-reduced-motion: reduce`.
+{{/ifEquals}}
+{{#ifEquals config.design.motionLevel "none"}}
+## Motion
+- No animations. No transitions. Instant state changes only.
+- Do not import `motion` or add CSS transitions.
+{{/ifEquals}}
+
+## Dark mode
+- Support both light and dark themes via `[data-theme="dark"]` selector.
+- Use token aliases (`--color-bg`, `--color-fg`) that remap automatically.
+- Never use hardcoded light/dark colors. The token system handles it.
+- Test both modes for every component change.
+
+## Figma integration
+{{#if config.design.figmaFileKey}}
+- Design source of truth is Figma file: `{{config.design.figmaFileKey}}`
+- Use Code Connect to map Figma components to code components.
+- Run `/figma-sync` after adding or modifying components.
+- When implementing from Figma, use `/figma-implement <figma-url>`.
+{{else}}
+- Run `/figma-sync` to push the component library to Figma.
+- When a Figma file is set up, add the file key to `.claude/settings.json`.
+{{/if}}
+
+## Forbidden patterns
+- Hardcoded hex/rgb/hsl colors — use tokens.
+- Inline `style=\{{}}` on React components — use Tailwind + tokens.
+- `!important` in CSS — fix specificity instead.
+- Custom breakpoints — use Tailwind's default responsive system.
+- Importing from `packages/ui/src/` internals — use the barrel export.

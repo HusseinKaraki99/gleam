@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+{{#ifEquals config.database.type "postgres"}}
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgres://postgres:postgres@localhost:5432/{{config.name}}"]
+    },
+{{/ifEquals}}
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  }
+}

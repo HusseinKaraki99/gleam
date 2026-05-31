@@ -1,0 +1,57 @@
+---
+name: figma-implement
+description: Implement a Figma design as production React code using the project's design system and component library.
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit, mcp__figma__get_design_context, mcp__figma__search_design_system, mcp__figma__get_screenshot, mcp__figma__get_code_connect_map
+argument-hint: "<figma-url>"
+---
+
+# Figma Implement
+
+Turn a Figma design into production code using your design system.
+
+## Steps
+
+### 1. Read the design
+```
+get_design_context(nodeId, fileKey)
+```
+Extract the node ID and file key from the provided Figma URL.
+
+### 2. Analyze the design
+- Identify layout structure (flex, grid, spacing)
+- Identify components that match your `{{config.org}}/ui` library
+- Identify colors that map to your design tokens
+- Identify typography that maps to your type scale
+- Note any new patterns not in the existing system
+
+### 3. Check existing components
+```
+search_design_system(query)
+```
+For each identified component, check if it exists in:
+- `packages/ui/src/` — shared component library
+- The current app's `components/` — app-specific components
+
+### 4. Implement
+- Use existing components from `{{config.org}}/ui` wherever possible
+- Use design tokens for all colors, spacing, typography
+- Create new components only for genuinely new patterns
+- Follow feature-based folder structure
+- Export `ComponentMeta` for any new components
+
+### 5. Verify
+- Compare the implementation against the Figma screenshot
+- Run `/design-review` on the new files
+- Check accessibility (keyboard nav, contrast, semantic HTML)
+{{#ifEquals config.design.motionLevel "full"}}
+- Add appropriate motion (page transitions, hover states)
+{{/ifEquals}}
+- Test both light and dark modes
+
+## Rules
+
+- **Token-first**: every color, spacing, and typography value must come from tokens
+- **Reuse-first**: use existing components before creating new ones
+- **Pixel-perfect is secondary to token compliance** — if a Figma design uses a non-token value, map it to the nearest token rather than hardcoding
+- **Accessibility is non-negotiable** — even if not in the Figma design

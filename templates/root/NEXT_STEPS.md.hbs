@@ -1,0 +1,55 @@
+# Next Steps - {{config.displayName}}
+
+> This is the initial backlog generated during project scaffolding.
+> Move items to your project tracker as you start working on them.
+
+## Priority 1 - Foundation
+
+- [ ] Run `pnpm install` and verify all packages resolve
+- [ ] Run `pnpm dev` and confirm all services start
+- [ ] Run `pnpm test` and confirm test harness works
+{{#ifEquals config.database.type "postgres"}}
+- [ ] Set up local PostgreSQL database
+- [ ] Run initial database migration
+{{/ifEquals}}
+{{#ifEquals config.auth "clerk"}}
+- [ ] Configure Clerk project and add API keys to `.env`
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+- [ ] Configure Auth0 tenant and add credentials to `.env`
+{{/ifEquals}}
+
+## Priority 2 - Core Features
+
+{{#each config.frontend.apps}}
+- [ ] Build landing page in `apps/{{this.name}}`
+{{/each}}
+{{#each config.backend.services}}
+- [ ] Implement first domain endpoint in `{{this.name}}`
+{{/each}}
+{{#ifMultiTenancy config}}
+- [ ] Implement tenant isolation ({{config.multiTenancy}})
+{{/ifMultiTenancy}}
+{{#ifI18n config}}
+- [ ] Set up i18n with locales: {{join config.i18n.locales ", "}}
+{{/ifI18n}}
+
+## Priority 3 - Production Readiness
+
+- [ ] Set up staging environment
+- [ ] Configure monitoring and alerting
+- [ ] Add end-to-end tests
+- [ ] Set up error tracking (Sentry or similar)
+- [ ] Configure rate limiting
+- [ ] Add health check endpoints
+- [ ] Review security headers
+{{#if config.needsDocker}}
+- [ ] Finalize Docker production builds
+{{/if}}
+
+## Priority 4 - Nice to Have
+
+- [ ] Add OpenAPI / Swagger documentation
+- [ ] Set up feature flags
+- [ ] Add performance benchmarks
+- [ ] Configure CDN for static assets

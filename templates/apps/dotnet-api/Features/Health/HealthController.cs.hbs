@@ -1,0 +1,26 @@
+using Microsoft.AspNetCore.Mvc;
+
+namespace {{pascalCase name}}.Features.Health;
+
+[ApiController]
+[Route("api/[controller]")]
+[Tags("Health")]
+public class HealthController : ControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType(typeof(HealthResponse), StatusCodes.Status200OK)]
+    public IActionResult Check()
+    {
+        return Ok(new HealthResponse
+        {
+            Status = "ok",
+            Timestamp = DateTime.UtcNow.ToString("o"),
+        });
+    }
+}
+
+public record HealthResponse
+{
+    public required string Status { get; init; }
+    public required string Timestamp { get; init; }
+}

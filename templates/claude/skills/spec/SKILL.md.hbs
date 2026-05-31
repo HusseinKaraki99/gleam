@@ -1,0 +1,313 @@
+---
+name: spec
+description: "Create a detailed feature specification with user stories, data model, API design, and test plan."
+user-invocable: true
+allowed-tools: Bash, Read, Write, Edit, WebSearch, AskUserQuestion, Agent
+argument-hint: "<feature-name>"
+---
+
+# Feature Specification
+
+Create a detailed, implementation-ready feature spec for **{{config.displayName}}**.
+
+## Input
+
+Parse `$ARGUMENTS` for the feature name. If no arguments are provided, ask the user what feature to specify.
+
+## Before starting
+
+1. Check if `docs/product/PRD.md` exists. If it does, read it for context:
+   - What is the overall product vision?
+   - Does this feature appear in the MVP scope?
+   - What constraints apply?
+   - Who are the target users?
+
+2. Check if `docs/research/` has any relevant research documents. If so, read them.
+
+3. Check if `docs/specs/` exists. Create it if not.
+
+4. Check if a spec already exists for this feature:
+   ```bash
+   ls docs/specs/ 2>/dev/null
+   ```
+   If updating an existing spec, read it first and note what is changing.
+
+5. Read `CLAUDE.md` for project rules, module boundaries, and technical constraints.
+
+## Specification process
+
+### Step 1: Feature overview
+
+Ask the user:
+- "Describe what this feature does in 2-3 sentences."
+- "Why is this feature important? What problem does it solve for users?"
+- "Who specifically uses this feature? (All users, admins only, specific roles?)"
+
+### Step 2: User stories
+
+For each user role involved, work with the user to define stories:
+
+Ask:
+- "As a [role], what do you want to be able to do with this feature?"
+- For each story, clarify: "What does 'done' look like? How do you know this works?"
+
+Structure each story as:
+```
+As a [role], I want [capability], so that [benefit].
+
+Acceptance criteria:
+- [ ] Given [context], when [action], then [result]
+- [ ] Given [context], when [action], then [result]
+```
+
+Aim for 3-8 user stories per feature. Push back if the user proposes too many -- that may be multiple features.
+
+### Step 3: Edge cases and error scenarios
+
+For each user story, ask:
+- "What happens if the user provides invalid input?"
+- "What happens if the system is under heavy load?"
+- "What happens if this operation is interrupted halfway?"
+- "What happens if the user does not have permission?"
+- "What happens if the dependent data does not exist?"
+{{#ifMultiTenancy config}}
+- "How does this behave across tenant boundaries?"
+{{/ifMultiTenancy}}
+{{#ifI18n config}}
+- "Are there i18n considerations? Different behavior by locale?"
+{{/ifI18n}}
+
+### Step 4: Data model
+
+Based on the user stories, define:
+- New tables or collections needed
+- New columns on existing tables
+- Relationships between entities
+- Indexes needed for query patterns
+- Data validation rules and constraints
+
+{{#ifEquals config.database.type "postgres"}}
+Use PostgreSQL data types. Define tables with columns, types, constraints, and indexes.
+{{/ifEquals}}
+{{#ifMultiTenancy config}}
+All tenant-scoped tables must include `tenant_id` with appropriate foreign key and index.
+{{/ifMultiTenancy}}
+
+### Step 5: API design
+
+Define the endpoints or operations this feature needs:
+
+{{#ifEquals config.apiStyle "rest"}}
+For each endpoint:
+- Method and path (e.g., `POST /api/v1/widgets`)
+- Request body schema
+- Response body schema
+- Status codes (success and error)
+- Authentication and authorization requirements
+- Rate limiting considerations
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "graphql"}}
+For each operation:
+- Query or mutation name
+- Input type
+- Return type
+- Authorization requirements
+- Resolver complexity considerations
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "trpc"}}
+For each procedure:
+- Procedure name and type (query/mutation)
+- Input schema (Zod)
+- Output type
+- Middleware requirements
+{{/ifEquals}}
+
+### Step 6: UI design
+
+Ask the user:
+- "Walk me through the screens or components needed for this feature."
+- "What is the most important screen? The one users see most."
+
+For each screen or component:
+- What information is displayed?
+- What actions can the user take?
+- What is the layout (list, form, dashboard, detail view)?
+- What are the loading, empty, and error states?
+{{#ifHasStack config "next-ssr"}}
+- Is this a server component or client component?
+- Does it need streaming/suspense?
+{{/ifHasStack}}
+
+### Step 7: Research
+
+Use **WebSearch** to research how 2-3 similar products implement this feature. Focus on:
+- UX patterns and interaction models
+- Data model approaches
+- Common pitfalls
+
+Present findings to the user and ask if any patterns should be adopted.
+
+### Step 8: Dependencies
+
+Ask the user:
+- "Does this feature depend on other features that must be built first?"
+- "Are there features that depend on this one?"
+- "Does this need any third-party integrations?"
+- "Are there infrastructure requirements? (Queues, caching, file storage, etc.)"
+
+## Output
+
+Create `docs/specs/<feature-name-kebab-case>.md`:
+
+```markdown
+# Feature Spec: [Feature Name]
+
+_Date: [today's date]_
+_Status: Draft_
+_PRD reference: [Section from PRD, if applicable]_
+
+## Overview
+
+[2-3 paragraph description of the feature, its purpose, and who uses it]
+
+## User Stories
+
+### US-1: [Story title]
+**As a** [role], **I want** [capability], **so that** [benefit].
+
+**Acceptance criteria**:
+- [ ] Given [context], when [action], then [result]
+- [ ] Given [context], when [action], then [result]
+
+**Edge cases**:
+- [Edge case]: [Expected behavior]
+
+[Repeat for each user story]
+
+## Data Model
+
+### New tables
+
+#### [table_name]
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | uuid | PK, default gen_random_uuid() | |
+| ... | ... | ... | ... |
+| created_at | timestamptz | NOT NULL, default now() | |
+| updated_at | timestamptz | NOT NULL, default now() | |
+
+**Indexes**:
+- `idx_[table]_[column]` on ([column]) — [Why this index is needed]
+
+### Modified tables
+- [table_name]: Add column [column] ([type]) — [Why]
+
+## API Design
+
+### [METHOD] [path]
+
+**Description**: [What this endpoint does]
+
+**Auth**: [Required role or permission]
+
+**Request**:
+```json
+{
+  "field": "type — description"
+}
+```
+
+**Response** (200):
+```json
+{
+  "field": "type — description"
+}
+```
+
+**Errors**:
+| Status | Code | Description |
+|--------|------|-------------|
+| 400 | VALIDATION_ERROR | [When this occurs] |
+| 404 | NOT_FOUND | [When this occurs] |
+
+[Repeat for each endpoint]
+
+## UI Design
+
+### Screen: [Screen name]
+
+**Purpose**: [What the user does here]
+
+**Layout**:
+- [Description of the layout and key elements]
+
+**Components**:
+- [Component name] — [What it does]
+
+**States**:
+- Loading: [What the user sees while data loads]
+- Empty: [What the user sees when there is no data]
+- Error: [What the user sees when something fails]
+- Success: [Normal state with data]
+
+[Repeat for each screen]
+
+## Edge Cases
+
+| Scenario | Expected behavior |
+|----------|------------------|
+| [Edge case] | [What should happen] |
+
+## Test Plan
+
+### Unit tests
+- [ ] [What to test] — [File where test should live]
+
+### Integration tests
+- [ ] [What to test] — [Scope of the test]
+
+### E2E tests
+- [ ] [Critical user flow to test]
+
+### Manual verification
+- [ ] [What to check manually before merge]
+
+## Dependencies
+
+### Depends on
+- [Feature or system this depends on]
+
+### Depended on by
+- [Feature or system that depends on this]
+
+### Third-party
+- [External service or library needed]
+
+### Infrastructure
+- [Queues, caches, storage, etc.]
+
+## Open Questions
+
+- [ ] [Question that needs an answer before implementation]
+```
+
+## After generating the spec
+
+1. Present a summary of the spec to the user.
+2. Ask: "Does this capture everything? Any missing edge cases or stories?"
+3. Incorporate feedback.
+4. Save key decisions to memory:
+   - The feature scope
+   - Data model decisions
+   - API design decisions
+
+## Rules
+
+- Every user story must have at least 2 acceptance criteria. If you cannot define acceptance criteria, the story is too vague.
+- Edge cases are not optional. Every feature has them. Identify at least 5.
+- The data model must be specific. Column names, types, and constraints -- not hand-waving.
+- The API design must include error cases. Happy path only is not a spec.
+- The test plan must cover more than the happy path.
+- If the feature is too large for a single spec, recommend splitting it and ask the user which part to spec first.
+- Do not include implementation details (specific code patterns, framework-specific syntax). That belongs in the implementation plan.
+- If the PRD does not exist, recommend running `/discover` first but proceed if the user insists.

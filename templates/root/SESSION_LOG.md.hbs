@@ -1,0 +1,42 @@
+# Session Log
+
+## {{year}} Initial Setup
+
+### Session 1 - Project Bootstrap
+
+**Date:** {{year}}
+**Goal:** Initialize {{config.displayName}} monorepo
+
+**What was done:**
+- Scaffolded monorepo with pnpm workspaces and Nx
+{{#each config.frontend.apps}}
+- Created {{this.type}} frontend app: `{{this.name}}`
+{{/each}}
+{{#each config.backend.services}}
+- Created {{this.type}} backend service: `{{this.name}}`
+{{/each}}
+{{#ifEquals config.database.type "postgres"}}
+- Set up PostgreSQL database layer
+{{/ifEquals}}
+- Configured CI/CD pipeline
+
+**Decisions:**
+- Monorepo managed with pnpm + Nx
+{{#ifEquals config.apiStyle "rest"}}
+- REST API style
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "graphql"}}
+- GraphQL API style
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "trpc"}}
+- tRPC for end-to-end type safety
+{{/ifEquals}}
+{{#ifEquals config.auth "clerk"}}
+- Clerk for authentication
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+- Auth0 for authentication
+{{/ifEquals}}
+
+**Next:**
+- See NEXT_STEPS.md for backlog

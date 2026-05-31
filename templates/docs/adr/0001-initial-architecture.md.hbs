@@ -1,0 +1,73 @@
+# ADR-0001: Initial Architecture
+
+**Status:** Accepted
+**Date:** {{year}}
+**Authors:** Team
+
+## Context
+
+We need to establish the foundational architecture for **{{config.displayName}}** ({{config.description}}).
+
+The team size is **{{config.teamSize}}** and the project needs to support:
+{{#each config.frontend.apps}}
+- Frontend: {{this.type}} (`{{this.name}}`)
+{{/each}}
+{{#each config.backend.services}}
+- Backend: {{this.type}} (`{{this.name}}`)
+{{/each}}
+{{#ifEquals config.database.type "postgres"}}
+- Database: PostgreSQL
+{{/ifEquals}}
+{{#ifEquals config.auth "clerk"}}
+- Authentication: Clerk
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+- Authentication: Auth0
+{{/ifEquals}}
+{{#ifMultiTenancy config}}
+- Multi-tenancy: {{config.multiTenancy}}
+{{/ifMultiTenancy}}
+{{#ifI18n config}}
+- Internationalization: {{join config.i18n.locales ", "}}
+{{/ifI18n}}
+
+## Decision
+
+### Monorepo Structure
+
+We chose a **pnpm + Nx** monorepo. This gives us:
+- Shared TypeScript configuration and tooling
+- Task caching and dependency-aware builds via Nx
+- Consistent linting and formatting via Biome
+{{#if config.needsGoWork}}
+- Support for polyglot services including Go
+{{/if}}
+{{#ifIncludes config.allStackIds "dotnet"}}
+- Support for polyglot services including .NET
+{{/ifIncludes}}
+
+### API Style
+
+We chose **{{config.apiStyle}}** for service communication.
+{{#ifEquals config.apiStyle "rest"}}
+REST was selected for its simplicity, broad tooling support, and team familiarity.
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "graphql"}}
+GraphQL was selected for its flexible querying, strong typing, and frontend-driven data fetching.
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "trpc"}}
+tRPC was selected for end-to-end type safety between TypeScript frontend and backend.
+{{/ifEquals}}
+
+### Hosting
+
+Target hosting: **{{config.hosting}}**.
+
+## Consequences
+
+- All TypeScript code shares a single `tsconfig.base.json`
+- Nx manages build ordering and caching
+- Each app/service is independently deployable
+{{#if config.isPolyglot}}
+- Non-Node services (Go, .NET) are managed outside pnpm workspaces but inside the same repo
+{{/if}}

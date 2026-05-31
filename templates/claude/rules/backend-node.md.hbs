@@ -1,0 +1,75 @@
+---
+globs: "apps/*/src/**/*.ts"
+---
+
+# Backend Node.js (NestJS) Rules
+
+## Module pattern
+
+Every feature module follows the same structure:
+
+```
+features/<name>/
+  <name>.module.ts        -- NestJS module declaration
+  <name>.controller.ts    -- HTTP layer (thin, delegates to service)
+  <name>.service.ts       -- Business logic
+  <name>.repository.ts    -- Data access (if needed)
+  dto/
+    create-<name>.dto.ts  -- Input validation
+    update-<name>.dto.ts
+    <name>-response.dto.ts
+  entities/
+    <name>.entity.ts      -- Domain entity
+  <name>.controller.spec.ts
+  <name>.service.spec.ts
+```
+
+- Controllers handle HTTP concerns only: parse request, call service, return response.
+- Services contain all business logic. Services never import `@nestjs/common` HTTP decorators.
+- One module per feature. No cross-module direct imports -- use dependency injection.
+
+## Validation
+
+- Request DTOs: `class-validator` decorators for runtime validation.
+- Config / environment: `zod` schemas for type-safe env parsing.
+- Always validate at the boundary. Services receive already-validated data.
+- Use `ValidationPipe` globally. Never skip validation.
+
+## Error handling
+
+- Use NestJS exception filters for consistent error responses.
+- Throw domain-specific exceptions (e.g., `NotFoundException`, `ConflictException`).
+- Never catch exceptions and silently swallow them.
+- Log errors with context (request ID, user ID, operation).
+- Return consistent error shape: `{ statusCode, message, error, timestamp }`.
+
+## API conventions
+
+- RESTful routes: `GET /api/<resource>`, `POST /api/<resource>`, etc.
+- Use plural nouns for resources: `/users`, not `/user`.
+- Pagination: `?page=1&limit=20` with consistent response envelope.
+- Versioning: `/api/v1/` prefix for all routes.
+{{#ifEquals config.apiStyle "graphql"}}
+- GraphQL resolvers follow the same separation: resolver (controller equivalent) + service.
+{{/ifEquals}}
+{{#ifEquals config.apiStyle "trpc"}}
+- tRPC routers follow the same separation: router (controller equivalent) + service.
+{{/ifEquals}}
+
+## Testing
+
+- **Unit tests**: `vitest` for services and utilities. Mock dependencies.
+- **Integration tests**: `supertest` + `@nestjs/testing` for API endpoint testing.
+- Test file naming: `<name>.spec.ts` (unit) or `<name>.e2e-spec.ts` (integration).
+- Each test must be independent. No shared mutable state between tests.
+- Use factory functions for test data, not raw object literals.
+
+## Forbidden patterns
+
+- `any` type -- use proper types or `unknown`.
+- Direct database access from controllers -- always go through a service.
+- Circular module dependencies -- refactor to a shared module or event-based communication.
+- `setTimeout` / `setInterval` for scheduling -- use `@nestjs/schedule`.
+- Synchronous file I/O in request handlers.
+- Hardcoded config values -- use `@nestjs/config` and environment variables.
+- `console.log` -- use NestJS `Logger` service.

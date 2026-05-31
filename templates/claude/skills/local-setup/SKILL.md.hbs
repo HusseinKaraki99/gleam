@@ -1,0 +1,150 @@
+---
+name: local-setup
+description: Bootstrap, doctor, or reset the local development environment. Validates tools, env vars, ports, and services.
+user-invocable: true
+allowed-tools: Bash, Read
+argument-hint: "[bootstrap | doctor | reset]"
+---
+
+# Local Setup
+
+Manage the local development environment for **{{config.displayName}}**.
+
+Default mode is `bootstrap` if no argument is provided.
+
+## Modes
+
+### bootstrap
+
+Full setup from scratch. Run each step and report pass/fail.
+
+1. **Check required tools**:
+   ```bash
+   node --version   # >= 22
+   pnpm --version   # >= 9
+   ```
+{{#ifHasStack config "go"}}
+   ```bash
+   go version       # >= 1.24
+   golangci-lint --version
+   ```
+{{/ifHasStack}}
+{{#ifHasStack config "dotnet"}}
+   ```bash
+   dotnet --version  # >= 9
+   ```
+{{/ifHasStack}}
+{{#if config.needsDocker}}
+   ```bash
+   docker --version
+   docker compose version
+   ```
+{{/if}}
+
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+{{#ifHasStack config "go"}}
+3. **Go workspace sync**:
+   ```bash
+   go work sync
+   ```
+{{/ifHasStack}}
+
+4. **Environment file**:
+   ```bash
+   if [ ! -f .env ]; then
+     cp .env.example .env
+     echo "Created .env from .env.example -- fill in secrets"
+   else
+     echo ".env already exists"
+   fi
+   ```
+
+{{#if config.needsDocker}}
+5. **Start Docker services**:
+   ```bash
+   docker compose -f infra/docker/docker-compose.yml up -d
+   ```
+   Wait for services to be healthy:
+   ```bash
+   docker compose -f infra/docker/docker-compose.yml ps
+   ```
+{{/if}}
+
+{{#ifEquals config.database.type "postgres"}}
+6. **Run database migrations**:
+{{#ifHasStack config "drizzle"}}
+   ```bash
+   pnpm db:migrate
+   ```
+{{/ifHasStack}}
+{{#ifHasStack config "ef-core"}}
+   ```bash
+   dotnet ef database update
+   ```
+{{/ifHasStack}}
+{{#ifHasStack config "sqlc"}}
+   ```bash
+   goose -dir db/migrations up
+   sqlc generate
+   ```
+{{/ifHasStack}}
+{{/ifEquals}}
+
+7. **Verify build**:
+   ```bash
+   pnpm nx run-many -t build
+   ```
+
+8. **Report**: List all steps with PASS/FAIL status. If any failed, provide fix suggestions.
+
+### doctor
+
+Diagnose issues without changing anything. Report each check as PASS/FAIL/WARN.
+
+1. Check tool versions (same requirements as bootstrap).
+2. Check port availability:
+   ```bash
+   lsof -i :3000 2>/dev/null | head -3   # frontend
+   lsof -i :3001 2>/dev/null | head -3   # secondary frontend or API
+   lsof -i :5432 2>/dev/null | head -3   # postgres
+   ```
+3. Check Docker status:
+   ```bash
+   docker info > /dev/null 2>&1 && echo "PASS: Docker running" || echo "FAIL: Docker not running"
+   ```
+4. Check database connectivity:
+   ```bash
+   pg_isready -h localhost -p 5432 2>/dev/null && echo "PASS: Postgres reachable" || echo "FAIL: Postgres not reachable"
+   ```
+5. Check `.env` exists and required vars are non-empty.
+6. Check git hooks are installed:
+   ```bash
+   ls .claude/hooks/ 2>/dev/null
+   ```
+7. Report all findings.
+
+### reset
+
+Clean restart. **Destructive** -- clears local state.
+
+1. ```bash
+   pnpm store prune
+   ```
+2. ```bash
+   rm -rf node_modules apps/*/node_modules libs/*/node_modules
+   ```
+3. ```bash
+   pnpm install
+   ```
+{{#if config.needsDocker}}
+4. ```bash
+   docker compose -f infra/docker/docker-compose.yml down -v
+   docker compose -f infra/docker/docker-compose.yml up -d
+   ```
+{{/if}}
+5. Run database migrations fresh.
+6. Verify build passes.

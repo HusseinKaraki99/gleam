@@ -1,0 +1,25 @@
+package usecase
+
+import (
+	"context"
+
+	"github.com/rs/zerolog"
+
+	"{{config.org}}/services/{{name}}/ports"
+)
+
+type UseCase struct {
+	repo   ports.Repository
+	logger zerolog.Logger
+}
+
+func New(repo ports.Repository, logger zerolog.Logger) *UseCase {
+	return &UseCase{
+		repo:   repo,
+		logger: logger.With().Str("component", "usecase").Logger(),
+	}
+}
+
+func (uc *UseCase) HealthCheck(ctx context.Context) error {
+	return uc.repo.Health(ctx)
+}

@@ -1,0 +1,68 @@
+---
+name: design-review
+description: Review UI changes against the design system quality bar. Checks tokens, accessibility, motion, responsiveness, and visual consistency.
+user-invocable: true
+allowed-tools: Bash, Read, Grep, Agent
+argument-hint: "[file or directory to review — defaults to all changed UI files]"
+---
+
+# Design Review
+
+Review UI changes for design system compliance before merging.
+
+## Step 1 — Identify changed UI files
+
+If `$ARGUMENTS` provided, review those files. Otherwise:
+
+```bash
+git diff --name-only origin/main...HEAD | grep -E '\.(tsx|css)$' | grep -v '\.test\.' | grep -v 'node_modules'
+```
+
+Filter to files in:
+- `packages/ui/src/`
+- `packages/design-tokens/`
+- `apps/*/src/components/`
+- `apps/*/src/features/*/components/`
+- `apps/*/src/app/` (layout/page files)
+
+If no UI files changed, stop and say so.
+
+## Step 2 — Read the design system context
+
+```bash
+# Check current tokens
+cat packages/design-tokens/tokens.css | head -30
+```
+
+Read the changed files to understand what's being modified.
+
+## Step 3 — Run the quality checklist
+
+Delegate to the `design-reviewer` agent with the list of changed files.
+
+The agent checks:
+1. **Token compliance** — no hardcoded colors, spacing, typography
+2. **Component patterns** — ComponentMeta exported, cva for variants
+3. **Accessibility** — keyboard nav, focus states, contrast, semantic HTML
+4. **Responsive** — mobile/tablet/desktop, touch targets
+{{#ifEquals config.design.motionLevel "full"}}
+5. **Motion** — token durations, reduced-motion support
+{{/ifEquals}}
+6. **Dark mode** — works in both themes
+7. **Visual consistency** — matches personality, empty/loading/error states
+
+## Step 4 — Output report
+
+Group findings:
+- **Failures** — must fix before merge
+- **Warnings** — should fix, creates design debt
+- **Passes** — checks that passed
+
+Verdict: SHIP IT / FIX FIRST / NEEDS DESIGN INPUT
+
+## When to run
+
+- After any changes to UI components
+- After modifying design tokens
+- Before merging any frontend PR
+- After implementing a Figma design

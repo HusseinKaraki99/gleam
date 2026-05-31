@@ -1,0 +1,26 @@
+{{#ifHasStack config "ef-core"}}
+using Microsoft.EntityFrameworkCore;
+using {{pascalCase config.name}}.Data;
+{{/ifHasStack}}
+using FluentValidation;
+
+namespace {{pascalCase name}}.Common.Extensions;
+
+public static class ServiceExtensions
+{
+    public static IServiceCollection AddApplicationServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddValidatorsFromAssemblyContaining<Program>();
+
+        services.AddHealthChecks();
+{{#ifHasStack config "ef-core"}}
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+{{/ifHasStack}}
+
+        return services;
+    }
+}

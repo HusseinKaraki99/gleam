@@ -1,0 +1,78 @@
+# {{config.displayName}} - Documentation
+
+> {{config.description}}
+
+## Project Structure
+
+```
+{{config.name}}/
+{{#each config.frontend.apps}}
+  apps/{{this.name}}/          # {{this.type}} frontend
+{{/each}}
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+  services/{{this.name}}/      # Go service
+{{else}}
+  apps/{{this.name}}/          # {{this.type}} backend
+{{/ifEquals}}
+{{/each}}
+  packages/                    # Shared packages
+{{#ifEquals config.database.type "postgres"}}
+  db/                          # Database schema & migrations
+{{/ifEquals}}
+  docs/                        # Documentation
+    adr/                       # Architecture Decision Records
+{{#if config.needsDocker}}
+  infra/                       # Infrastructure configs
+    docker/                    # Docker compose for local dev
+{{/if}}
+```
+
+## Getting Started
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start local services
+{{#if config.needsDocker}}
+docker compose -f infra/docker/docker-compose.yml up -d
+{{/if}}
+
+# Run all apps in dev mode
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Build everything
+pnpm build
+```
+
+## Architecture Decision Records
+
+- [ADR-0001: Initial Architecture](adr/0001-initial-architecture.md)
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+{{#each config.frontend.apps}}
+| Frontend ({{this.name}}) | {{this.type}} |
+{{/each}}
+{{#each config.backend.services}}
+| Backend ({{this.name}}) | {{this.type}} |
+{{/each}}
+{{#ifEquals config.database.type "postgres"}}
+| Database | PostgreSQL |
+{{/ifEquals}}
+{{#ifEquals config.auth "clerk"}}
+| Auth | Clerk |
+{{/ifEquals}}
+{{#ifEquals config.auth "auth0"}}
+| Auth | Auth0 |
+{{/ifEquals}}
+| API Style | {{config.apiStyle}} |
+| Hosting | {{config.hosting}} |
+| Monorepo | pnpm + Nx |
+| Formatting | Biome |

@@ -1,0 +1,64 @@
+.PHONY: all build test lint clean
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+.PHONY: build-{{this.name}} test-{{this.name}} run-{{this.name}}
+{{/ifEquals}}
+{{/each}}
+
+# ─── Build ─────────────────────────────────────────
+
+all: lint test build
+
+build:
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+	$(MAKE) build-{{this.name}}
+{{/ifEquals}}
+{{/each}}
+
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+build-{{this.name}}:
+	cd services/{{this.name}} && go build -o ../../bin/{{this.name}} .
+
+{{/ifEquals}}
+{{/each}}
+# ─── Test ──────────────────────────────────────────
+
+test:
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+	$(MAKE) test-{{this.name}}
+{{/ifEquals}}
+{{/each}}
+
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+test-{{this.name}}:
+	cd services/{{this.name}} && go test ./... -v -race -coverprofile=coverage.out
+
+{{/ifEquals}}
+{{/each}}
+# ─── Lint ──────────────────────────────────────────
+
+lint:
+	golangci-lint run ./...
+
+# ─── Run ───────────────────────────────────────────
+
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+run-{{this.name}}:
+	cd services/{{this.name}} && go run .
+
+{{/ifEquals}}
+{{/each}}
+# ─── Clean ─────────────────────────────────────────
+
+clean:
+	rm -rf bin/
+{{#each config.backend.services}}
+{{#ifEquals this.type "go"}}
+	rm -f services/{{this.name}}/coverage.out
+{{/ifEquals}}
+{{/each}}

@@ -1,0 +1,2429 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateProject: dotnet-ef > matches golden output for key files > .claude/settings.json 1`] = `
+"{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-context.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/capture-feedback.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(nx:*)",
+      "Bash(npx:*)",
+      "Bash(biome:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git stash list*)",
+      "Bash(git rev-list*)",
+      "Bash(git symbolic-ref*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)",
+      "Bash(dotnet build*)",
+      "Bash(dotnet test*)",
+      "Bash(dotnet format*)",
+      "Bash(dotnet ef*)",
+      "Bash(docker compose -f infra/*)",
+      "Bash(docker compose ps*)"
+    ]
+  }
+}
+"
+`;
+
+exports[`generateProject: dotnet-ef > matches golden output for key files > CLAUDE.md 1`] = `
+"# Acme
+
+## Starting a fresh session
+
+Run \`/start-session\` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+Acme application This is a team-team project built by a mid-size team using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in \`libs/\`.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend (web) | Next.js 15 (App Router, RSC, Server Actions) |
+| Backend (api) | ASP.NET Core (.NET 9) |
+| Database | PostgreSQL |
+| ORM (.NET) | Entity Framework Core |
+| Auth | Custom (JWT) |
+| API style | REST |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | AWS |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| \`CLAUDE.md\` (this file) | Always loaded -- project-wide constitution |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Next.js rules |
+| \`.claude/rules/backend-dotnet.md\` | \`apps/**/*.cs\` -- .NET rules |
+| \`.claude/rules/database.md\` | \`db/**/*\` -- Database & migration rules |
+| \`.claude/rules/testing.md\` | \`**/*.{test,spec}.{ts,tsx,go}\` -- Testing rules |
+| \`.claude/rules/design-system.md\` | \`packages/ui/**\`, \`packages/design-tokens/**\`, \`*/components/**\` -- Design system rules |
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in \`libs/\`. Each lib has a barrel \`index.ts\`.
+- Import from libs using workspace aliases (\`@acme/lib-name\`), never relative \`../\` paths.
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: \`foo.ts\` -> \`foo.test.ts\`, \`foo.go\` -> \`foo_test.go\`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via \`.env\` (gitignored) and \`.env.example\` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+
+### Commits
+- Use **Conventional Commits**: \`type(scope): message\`
+- Types: \`feat\`, \`fix\`, \`refactor\`, \`test\`, \`docs\`, \`chore\`, \`ci\`, \`perf\`
+- Scope = app or lib name (e.g., \`feat(web): add dashboard page\`)
+- Never skip pre-commit hooks (\`--no-verify\` is forbidden).
+
+## Project lifecycle
+
+This project follows a phased approach. Check \`PROJECT_STATUS.md\` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | \`/discover\`, \`/research\` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | \`/spec\`, \`/plan-feature\` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | \`/adr\`, \`/plan-review\` | ADRs for key decisions, schema finalized |
+| **Development** | \`/new-feature\`, \`/commit\`, \`/self-review\` | Acceptance criteria met, tests passing |
+| **Review** | \`/self-review\`, \`/design-review\`, \`/sync-docs\` | All gates passed, docs in sync |
+| **Deployment** | \`/deploy\`, \`/local-setup doctor\` | Staging verified, monitoring configured |
+
+Run the \`phase-gate\` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run \`/discover\` to validate the product idea and gather requirements
+2. Run \`/research <competitor>\` to understand the competitive landscape
+3. Run \`/spec <feature>\` for each MVP feature
+4. Run \`/plan-feature <feature>\` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run \`/discover\` and \`/research\` before writing specs.
+2. **Spec before code.** Run \`/spec\` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run \`/sync-docs\` to keep everything in sync.
+8. **Log sessions.** After meaningful work, \`/sync-docs\` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run \`/iterate <component>\` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update \`.claude/rules/design-system.md\`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant \`.claude/rules/\` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| \`/start-session\` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| \`/discover\` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| \`/research <topic>\` | Discovery | Deep competitive and technical research on a topic. |
+| \`/spec <feature>\` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| \`/plan-feature <feature>\` | Specification | Break a spec into implementable tasks with dependencies. |
+| \`/adr <decision>\` | Architecture | Create an Architecture Decision Record. |
+| \`/plan-review\` | Architecture | Challenge a plan with engineering rigor. |
+| \`/new-feature <name>\` | Development | Scaffold a new feature across the relevant stack(s). |
+| \`/commit\` | Development | Stage, validate, and create a conventional commit. |
+| \`/self-review\` | Review | Run comprehensive self-review on current changes. |
+| \`/iterate <component>\` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| \`/sync-docs\` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| \`/local-setup\` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| \`/deploy\` | Deployment | Trigger a release workflow. |
+| \`/design-review\` | Review UI changes against the design system quality bar. |
+| \`/figma-sync\` | Sync components/tokens between code and Figma. |
+| \`/figma-implement\` | Implement a Figma design as production code. |
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| \`product-analyst\` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| \`phase-gate\` | sonnet | Validates phase completeness before transitions |
+| \`architect\` | opus | Designing features, making architectural decisions |
+| \`code-reviewer\` | opus | Reviewing PRs and code changes |
+| \`security-auditor\` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| \`test-writer\` | sonnet | Generating tests for existing or new code |
+| \`performance-analyst\` | sonnet | N+1 detection, bundle analysis, API profiling |
+| \`refactoring-specialist\` | sonnet | Systematic refactors with test gates |
+| \`react-architect\` | sonnet | React component design, RSC patterns, hooks |
+| \`design-reviewer\` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+
+## Forbidden actions
+
+- **NEVER** run \`git push --force\` to \`main\` or \`master\`.
+- **NEVER** run \`rm -rf /\`, \`rm -rf ~\`, or \`rm -rf .\` outside of \`node_modules\`/\`dist\`.
+- **NEVER** modify \`.env\` files directly. Only modify \`.env.example\`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit \`node_modules\`, \`dist\`, \`.next\`, or build artifacts.
+- **NEVER** use \`any\` in TypeScript. Use \`unknown\` and narrow.
+- **NEVER** skip the pre-commit hook with \`--no-verify\`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from \`@acme/design-tokens\`.
+- **NEVER** use inline \`style={{}}\` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+"
+`;
+
+exports[`generateProject: dotnet-ef > matches golden output for key files > nx.json 1`] = `
+"{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)",
+      "!{projectRoot}/coverage/**",
+      "!{projectRoot}/tsconfig.spec.json"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/biome.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "cache": true
+    },
+    "lint": {
+      "inputs": ["default"],
+      "cache": true
+    },
+    "typecheck": {
+      "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
+"
+`;
+
+exports[`generateProject: dotnet-ef > matches golden output for key files > package.json 1`] = `
+"{
+  "name": "acme",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "clean": "nx run-many -t clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "nx": "^20.8.0"
+  }
+}
+"
+`;
+
+exports[`generateProject: dotnet-ef > matches the generated file manifest 1`] = `
+[
+  ".claude/README.md",
+  ".claude/agents/architect.md",
+  ".claude/agents/code-reviewer.md",
+  ".claude/agents/design-reviewer.md",
+  ".claude/agents/performance-analyst.md",
+  ".claude/agents/phase-gate.md",
+  ".claude/agents/product-analyst.md",
+  ".claude/agents/react-architect.md",
+  ".claude/agents/refactoring-specialist.md",
+  ".claude/agents/security-auditor.md",
+  ".claude/agents/test-writer.md",
+  ".claude/feedback/README.md",
+  ".claude/hints.txt",
+  ".claude/hooks/block-dangerous-bash.cjs",
+  ".claude/hooks/capture-feedback.cjs",
+  ".claude/hooks/format-on-edit.cjs",
+  ".claude/hooks/session-context.cjs",
+  ".claude/rules/backend-dotnet.md",
+  ".claude/rules/database.md",
+  ".claude/rules/design-system.md",
+  ".claude/rules/frontend.md",
+  ".claude/rules/testing.md",
+  ".claude/settings.json",
+  ".claude/skills/adr/SKILL.md",
+  ".claude/skills/commit/SKILL.md",
+  ".claude/skills/deploy/SKILL.md",
+  ".claude/skills/design-review/SKILL.md",
+  ".claude/skills/discover/SKILL.md",
+  ".claude/skills/feedback-review/SKILL.md",
+  ".claude/skills/figma-implement/SKILL.md",
+  ".claude/skills/figma-sync/SKILL.md",
+  ".claude/skills/iterate/SKILL.md",
+  ".claude/skills/local-setup/SKILL.md",
+  ".claude/skills/new-feature/SKILL.md",
+  ".claude/skills/plan-feature/SKILL.md",
+  ".claude/skills/plan-review/SKILL.md",
+  ".claude/skills/research/SKILL.md",
+  ".claude/skills/self-review/SKILL.md",
+  ".claude/skills/spec/SKILL.md",
+  ".claude/skills/start-session/SKILL.md",
+  ".claude/skills/sync-docs/SKILL.md",
+  ".claude/welcome-message.md",
+  ".editorconfig",
+  ".env.example",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  ".mcp.json",
+  ".npmrc",
+  ".tool-versions",
+  "CLAUDE.md",
+  "NEXT_STEPS.md",
+  "PROJECT_STATUS.md",
+  "SESSION_LOG.md",
+  "apps/api/CLAUDE.md",
+  "apps/api/Common/Extensions/ServiceExtensions.cs",
+  "apps/api/Common/Middleware/ExceptionMiddleware.cs",
+  "apps/api/Features/Health/HealthController.cs",
+  "apps/api/Program.cs",
+  "apps/api/api.csproj",
+  "apps/api/appsettings.Development.json",
+  "apps/api/appsettings.json",
+  "apps/web/CLAUDE.md",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/lib/api/client.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vitest.config.ts",
+  "biome.json",
+  "db/AppDbContext.cs",
+  "db/Data.csproj",
+  "db/Entities/User.cs",
+  "docs/README.md",
+  "docs/adr/0001-initial-architecture.md",
+  "docs/product/PRD.md",
+  "docs/research/_TEMPLATE.md",
+  "docs/specs/_TEMPLATE.md",
+  "infra/docker/docker-compose.yml",
+  "nx.json",
+  "package.json",
+  "packages/design-tokens/index.ts",
+  "packages/design-tokens/motion.ts",
+  "packages/design-tokens/package.json",
+  "packages/design-tokens/tokens.css",
+  "packages/types/src/index.ts",
+  "packages/ui/code-connect.ts",
+  "packages/ui/package.json",
+  "packages/ui/src/badge/badge.tsx",
+  "packages/ui/src/badge/index.ts",
+  "packages/ui/src/button/button.tsx",
+  "packages/ui/src/button/index.ts",
+  "packages/ui/src/card/card.tsx",
+  "packages/ui/src/card/index.ts",
+  "packages/ui/src/component-meta.ts",
+  "packages/ui/src/index.ts",
+  "packages/ui/src/input/index.ts",
+  "packages/ui/src/input/input.tsx",
+  "packages/ui/src/primitives/cn.ts",
+  "packages/ui/src/primitives/motion-config.ts",
+  "pnpm-workspace.yaml",
+  "tsconfig.base.json",
+]
+`;
+
+exports[`generateProject: enterprise > matches golden output for key files > .claude/settings.json 1`] = `
+"{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-context.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/capture-feedback.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(nx:*)",
+      "Bash(npx:*)",
+      "Bash(biome:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git stash list*)",
+      "Bash(git rev-list*)",
+      "Bash(git symbolic-ref*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)",
+      "Bash(go:*)",
+      "Bash(go test*)",
+      "Bash(go build*)",
+      "Bash(go vet*)",
+      "Bash(golangci-lint:*)",
+      "Bash(gofumpt:*)",
+      "Bash(sqlc:*)",
+      "Bash(goose:*)",
+      "Bash(docker compose -f infra/*)",
+      "Bash(docker compose ps*)"
+    ]
+  }
+}
+"
+`;
+
+exports[`generateProject: enterprise > matches golden output for key files > CLAUDE.md 1`] = `
+"# Acme
+
+## Starting a fresh session
+
+Run \`/start-session\` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+Acme application This is a large-team project built by a large engineering team using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in \`libs/\`. Multi-tenancy is implemented via row-level isolation. Internationalization is enabled with locales: en, ar, fr.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend (web) | Next.js 15 (App Router, RSC, Server Actions) |
+| Frontend (admin) | Vite + React 19 (SPA) |
+| Frontend (marketing) | Next.js 15 (App Router, RSC, Server Actions) |
+| Backend (api) | Go (Chi, hexagonal architecture) |
+| Backend (worker) | Go (Chi, hexagonal architecture) |
+| Backend (notifications) | NestJS 11 (Node.js) |
+| Mobile | Expo (React Native) |
+| Database | PostgreSQL |
+| ORM (Node.js) | Drizzle |
+| ORM (Go) | sqlc |
+| Auth | Clerk |
+| API style | REST |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | GCP |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| \`CLAUDE.md\` (this file) | Always loaded -- project-wide constitution |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Next.js rules |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Vite rules |
+| \`.claude/rules/backend-node.md\` | \`apps/*/src/**/*.ts\` -- NestJS rules |
+| \`.claude/rules/backend-go.md\` | \`services/**/*.go\` -- Go rules |
+| \`.claude/rules/database.md\` | \`db/**/*\` -- Database & migration rules |
+| \`.claude/rules/mobile.md\` | \`apps/mobile/**/*.{ts,tsx}\` -- Expo / React Native rules |
+| \`.claude/rules/testing.md\` | \`**/*.{test,spec}.{ts,tsx,go}\` -- Testing rules |
+| \`.claude/rules/design-system.md\` | \`packages/ui/**\`, \`packages/design-tokens/**\`, \`*/components/**\` -- Design system rules |
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in \`libs/\`. Each lib has a barrel \`index.ts\`.
+- Import from libs using workspace aliases (\`@acme/lib-name\`), never relative \`../\` paths.
+- Go services and Node.js apps communicate only via APIs, never via shared code.
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: \`foo.ts\` -> \`foo.test.ts\`, \`foo.go\` -> \`foo_test.go\`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via \`.env\` (gitignored) and \`.env.example\` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+- Auth is handled by Clerk. Never roll custom auth middleware.
+
+### Commits
+- Use **Conventional Commits**: \`type(scope): message\`
+- Types: \`feat\`, \`fix\`, \`refactor\`, \`test\`, \`docs\`, \`chore\`, \`ci\`, \`perf\`
+- Scope = app or lib name (e.g., \`feat(web): add dashboard page\`)
+- Never skip pre-commit hooks (\`--no-verify\` is forbidden).
+
+### Multi-tenancy
+- Tenancy model: **row-level**
+- Every DB table that holds tenant data **must** have a \`tenant_id\` column.
+- Every query against tenant data **must** filter by \`tenant_id\`. No exceptions.
+- Never expose data across tenant boundaries. Test with multiple tenants.
+
+### Internationalization
+- All user-facing strings go through the i18n system. Never hard-code UI text.
+- Supported locales: en, ar, fr
+- Translation keys use dot notation: \`feature.component.label\`
+- New features must include translations for all supported locales.
+
+## Project lifecycle
+
+This project follows a phased approach. Check \`PROJECT_STATUS.md\` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | \`/discover\`, \`/research\` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | \`/spec\`, \`/plan-feature\` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | \`/adr\`, \`/plan-review\` | ADRs for key decisions, schema finalized |
+| **Development** | \`/new-feature\`, \`/commit\`, \`/self-review\` | Acceptance criteria met, tests passing |
+| **Review** | \`/self-review\`, \`/design-review\`, \`/sync-docs\` | All gates passed, docs in sync |
+| **Deployment** | \`/deploy\`, \`/local-setup doctor\` | Staging verified, monitoring configured |
+
+Run the \`phase-gate\` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run \`/discover\` to validate the product idea and gather requirements
+2. Run \`/research <competitor>\` to understand the competitive landscape
+3. Run \`/spec <feature>\` for each MVP feature
+4. Run \`/plan-feature <feature>\` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run \`/discover\` and \`/research\` before writing specs.
+2. **Spec before code.** Run \`/spec\` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run \`/sync-docs\` to keep everything in sync.
+8. **Log sessions.** After meaningful work, \`/sync-docs\` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run \`/iterate <component>\` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update \`.claude/rules/design-system.md\`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant \`.claude/rules/\` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| \`/start-session\` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| \`/discover\` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| \`/research <topic>\` | Discovery | Deep competitive and technical research on a topic. |
+| \`/spec <feature>\` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| \`/plan-feature <feature>\` | Specification | Break a spec into implementable tasks with dependencies. |
+| \`/adr <decision>\` | Architecture | Create an Architecture Decision Record. |
+| \`/plan-review\` | Architecture | Challenge a plan with engineering rigor. |
+| \`/new-feature <name>\` | Development | Scaffold a new feature across the relevant stack(s). |
+| \`/commit\` | Development | Stage, validate, and create a conventional commit. |
+| \`/self-review\` | Review | Run comprehensive self-review on current changes. |
+| \`/iterate <component>\` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| \`/sync-docs\` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| \`/local-setup\` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| \`/deploy\` | Deployment | Trigger a release workflow. |
+| \`/design-review\` | Review UI changes against the design system quality bar. |
+| \`/figma-sync\` | Sync components/tokens between code and Figma. |
+| \`/figma-implement\` | Implement a Figma design as production code. |
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| \`product-analyst\` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| \`phase-gate\` | sonnet | Validates phase completeness before transitions |
+| \`architect\` | opus | Designing features, making architectural decisions |
+| \`code-reviewer\` | opus | Reviewing PRs and code changes |
+| \`security-auditor\` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| \`test-writer\` | sonnet | Generating tests for existing or new code |
+| \`performance-analyst\` | sonnet | N+1 detection, bundle analysis, API profiling |
+| \`refactoring-specialist\` | sonnet | Systematic refactors with test gates |
+| \`react-architect\` | sonnet | React component design, RSC patterns, hooks |
+| \`react-architect\` | sonnet | React component design, state management, hooks |
+| \`go-expert\` | sonnet | Go concurrency, error handling, performance |
+| \`design-reviewer\` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+
+## Forbidden actions
+
+- **NEVER** run \`git push --force\` to \`main\` or \`master\`.
+- **NEVER** run \`rm -rf /\`, \`rm -rf ~\`, or \`rm -rf .\` outside of \`node_modules\`/\`dist\`.
+- **NEVER** modify \`.env\` files directly. Only modify \`.env.example\`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit \`node_modules\`, \`dist\`, \`.next\`, or build artifacts.
+- **NEVER** use \`any\` in TypeScript. Use \`unknown\` and narrow.
+- **NEVER** skip the pre-commit hook with \`--no-verify\`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from \`@acme/design-tokens\`.
+- **NEVER** use inline \`style={{}}\` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+"
+`;
+
+exports[`generateProject: enterprise > matches golden output for key files > nx.json 1`] = `
+"{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)",
+      "!{projectRoot}/coverage/**",
+      "!{projectRoot}/tsconfig.spec.json"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/biome.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "cache": true
+    },
+    "lint": {
+      "inputs": ["default"],
+      "cache": true
+    },
+    "typecheck": {
+      "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "plugins": ["@nx-go/nx-go"]
+}
+"
+`;
+
+exports[`generateProject: enterprise > matches golden output for key files > package.json 1`] = `
+"{
+  "name": "acme",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "clean": "nx run-many -t clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "nx": "^20.8.0"
+  }
+}
+"
+`;
+
+exports[`generateProject: enterprise > matches the generated file manifest 1`] = `
+[
+  ".claude/README.md",
+  ".claude/agents/architect.md",
+  ".claude/agents/code-reviewer.md",
+  ".claude/agents/design-reviewer.md",
+  ".claude/agents/go-expert.md",
+  ".claude/agents/performance-analyst.md",
+  ".claude/agents/phase-gate.md",
+  ".claude/agents/product-analyst.md",
+  ".claude/agents/react-architect.md",
+  ".claude/agents/refactoring-specialist.md",
+  ".claude/agents/security-auditor.md",
+  ".claude/agents/test-writer.md",
+  ".claude/feedback/README.md",
+  ".claude/hints.txt",
+  ".claude/hooks/block-dangerous-bash.cjs",
+  ".claude/hooks/capture-feedback.cjs",
+  ".claude/hooks/format-on-edit.cjs",
+  ".claude/hooks/session-context.cjs",
+  ".claude/rules/backend-go.md",
+  ".claude/rules/backend-node.md",
+  ".claude/rules/database.md",
+  ".claude/rules/design-system.md",
+  ".claude/rules/frontend.md",
+  ".claude/rules/mobile.md",
+  ".claude/rules/testing.md",
+  ".claude/settings.json",
+  ".claude/skills/adr/SKILL.md",
+  ".claude/skills/commit/SKILL.md",
+  ".claude/skills/deploy/SKILL.md",
+  ".claude/skills/design-review/SKILL.md",
+  ".claude/skills/discover/SKILL.md",
+  ".claude/skills/feedback-review/SKILL.md",
+  ".claude/skills/figma-implement/SKILL.md",
+  ".claude/skills/figma-sync/SKILL.md",
+  ".claude/skills/iterate/SKILL.md",
+  ".claude/skills/local-setup/SKILL.md",
+  ".claude/skills/new-feature/SKILL.md",
+  ".claude/skills/plan-feature/SKILL.md",
+  ".claude/skills/plan-review/SKILL.md",
+  ".claude/skills/research/SKILL.md",
+  ".claude/skills/self-review/SKILL.md",
+  ".claude/skills/spec/SKILL.md",
+  ".claude/skills/start-session/SKILL.md",
+  ".claude/skills/sync-docs/SKILL.md",
+  ".claude/welcome-message.md",
+  ".editorconfig",
+  ".env.example",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  ".golangci.yml",
+  ".mcp.json",
+  ".npmrc",
+  ".tool-versions",
+  "CLAUDE.md",
+  "Makefile",
+  "NEXT_STEPS.md",
+  "PROJECT_STATUS.md",
+  "SESSION_LOG.md",
+  "apps/admin/CLAUDE.md",
+  "apps/admin/index.html",
+  "apps/admin/package.json",
+  "apps/admin/src/app.tsx",
+  "apps/admin/src/index.css",
+  "apps/admin/src/main.tsx",
+  "apps/admin/tsconfig.json",
+  "apps/admin/vite.config.ts",
+  "apps/admin/vitest.config.ts",
+  "apps/marketing/CLAUDE.md",
+  "apps/marketing/next.config.ts",
+  "apps/marketing/package.json",
+  "apps/marketing/postcss.config.mjs",
+  "apps/marketing/src/app/globals.css",
+  "apps/marketing/src/app/layout.tsx",
+  "apps/marketing/src/app/page.tsx",
+  "apps/marketing/src/lib/api/client.ts",
+  "apps/marketing/tsconfig.json",
+  "apps/marketing/vitest.config.ts",
+  "apps/mobile/CLAUDE.md",
+  "apps/mobile/app.json",
+  "apps/mobile/app/_layout.tsx",
+  "apps/mobile/app/index.tsx",
+  "apps/mobile/package.json",
+  "apps/mobile/tsconfig.json",
+  "apps/notifications/CLAUDE.md",
+  "apps/notifications/nest-cli.json",
+  "apps/notifications/package.json",
+  "apps/notifications/src/app.module.ts",
+  "apps/notifications/src/common/filters/http-exception.filter.ts",
+  "apps/notifications/src/common/interceptors/transform.interceptor.ts",
+  "apps/notifications/src/config/env.config.ts",
+  "apps/notifications/src/health/health.controller.ts",
+  "apps/notifications/src/health/health.module.ts",
+  "apps/notifications/src/main.ts",
+  "apps/notifications/tsconfig.json",
+  "apps/notifications/vitest.config.ts",
+  "apps/web/CLAUDE.md",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/lib/api/client.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vitest.config.ts",
+  "biome.json",
+  "db/drizzle.config.ts",
+  "db/generated/.gitkeep",
+  "db/migrations/.gitkeep",
+  "db/migrations/00001_initial.sql",
+  "db/package.json",
+  "db/queries/users.sql",
+  "db/schema/index.ts",
+  "db/schema/users.ts",
+  "db/seed.ts",
+  "db/sqlc.yaml",
+  "docs/README.md",
+  "docs/adr/0001-initial-architecture.md",
+  "docs/product/PRD.md",
+  "docs/research/_TEMPLATE.md",
+  "docs/specs/_TEMPLATE.md",
+  "go.work",
+  "infra/docker/docker-compose.yml",
+  "nx.json",
+  "package.json",
+  "packages/design-tokens/index.ts",
+  "packages/design-tokens/motion.ts",
+  "packages/design-tokens/package.json",
+  "packages/design-tokens/tokens.css",
+  "packages/types/src/index.ts",
+  "packages/ui/code-connect.ts",
+  "packages/ui/package.json",
+  "packages/ui/src/badge/badge.tsx",
+  "packages/ui/src/badge/index.ts",
+  "packages/ui/src/button/button.tsx",
+  "packages/ui/src/button/index.ts",
+  "packages/ui/src/card/card.tsx",
+  "packages/ui/src/card/index.ts",
+  "packages/ui/src/component-meta.ts",
+  "packages/ui/src/index.ts",
+  "packages/ui/src/input/index.ts",
+  "packages/ui/src/input/input.tsx",
+  "packages/ui/src/primitives/cn.ts",
+  "packages/ui/src/primitives/motion-config.ts",
+  "pnpm-workspace.yaml",
+  "services/api/adapters/http/handler.go",
+  "services/api/adapters/postgres/repository.go",
+  "services/api/domain/errors.go",
+  "services/api/domain/models.go",
+  "services/api/go.mod",
+  "services/api/ports/repository.go",
+  "services/api/service.go",
+  "services/api/service_test.go",
+  "services/api/usecase/usecase.go",
+  "services/worker/adapters/http/handler.go",
+  "services/worker/adapters/postgres/repository.go",
+  "services/worker/domain/errors.go",
+  "services/worker/domain/models.go",
+  "services/worker/go.mod",
+  "services/worker/ports/repository.go",
+  "services/worker/service.go",
+  "services/worker/service_test.go",
+  "services/worker/usecase/usecase.go",
+  "tsconfig.base.json",
+]
+`;
+
+exports[`generateProject: fullstack-mobile > matches golden output for key files > .claude/settings.json 1`] = `
+"{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-context.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/capture-feedback.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(nx:*)",
+      "Bash(npx:*)",
+      "Bash(biome:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git stash list*)",
+      "Bash(git rev-list*)",
+      "Bash(git symbolic-ref*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)"
+    ]
+  }
+}
+"
+`;
+
+exports[`generateProject: fullstack-mobile > matches golden output for key files > CLAUDE.md 1`] = `
+"# Acme
+
+## Starting a fresh session
+
+Run \`/start-session\` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+Acme application This is a small-team project built by a small team using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in \`libs/\`.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend (web) | Next.js 15 (App Router, RSC, Server Actions) |
+| Backend (api) | NestJS 11 (Node.js) |
+| Mobile | Expo (React Native) |
+| Database | PostgreSQL |
+| ORM (Node.js) | Drizzle |
+| Auth | Clerk |
+| API style | REST |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | Vercel + Fly.io |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| \`CLAUDE.md\` (this file) | Always loaded -- project-wide constitution |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Next.js rules |
+| \`.claude/rules/backend-node.md\` | \`apps/*/src/**/*.ts\` -- NestJS rules |
+| \`.claude/rules/database.md\` | \`db/**/*\` -- Database & migration rules |
+| \`.claude/rules/mobile.md\` | \`apps/mobile/**/*.{ts,tsx}\` -- Expo / React Native rules |
+| \`.claude/rules/testing.md\` | \`**/*.{test,spec}.{ts,tsx,go}\` -- Testing rules |
+| \`.claude/rules/design-system.md\` | \`packages/ui/**\`, \`packages/design-tokens/**\`, \`*/components/**\` -- Design system rules |
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in \`libs/\`. Each lib has a barrel \`index.ts\`.
+- Import from libs using workspace aliases (\`@acme/lib-name\`), never relative \`../\` paths.
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: \`foo.ts\` -> \`foo.test.ts\`, \`foo.go\` -> \`foo_test.go\`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via \`.env\` (gitignored) and \`.env.example\` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+- Auth is handled by Clerk. Never roll custom auth middleware.
+
+### Commits
+- Use **Conventional Commits**: \`type(scope): message\`
+- Types: \`feat\`, \`fix\`, \`refactor\`, \`test\`, \`docs\`, \`chore\`, \`ci\`, \`perf\`
+- Scope = app or lib name (e.g., \`feat(web): add dashboard page\`)
+- Never skip pre-commit hooks (\`--no-verify\` is forbidden).
+
+## Project lifecycle
+
+This project follows a phased approach. Check \`PROJECT_STATUS.md\` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | \`/discover\`, \`/research\` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | \`/spec\`, \`/plan-feature\` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | \`/adr\`, \`/plan-review\` | ADRs for key decisions, schema finalized |
+| **Development** | \`/new-feature\`, \`/commit\`, \`/self-review\` | Acceptance criteria met, tests passing |
+| **Review** | \`/self-review\`, \`/design-review\`, \`/sync-docs\` | All gates passed, docs in sync |
+| **Deployment** | \`/deploy\`, \`/local-setup doctor\` | Staging verified, monitoring configured |
+
+Run the \`phase-gate\` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run \`/discover\` to validate the product idea and gather requirements
+2. Run \`/research <competitor>\` to understand the competitive landscape
+3. Run \`/spec <feature>\` for each MVP feature
+4. Run \`/plan-feature <feature>\` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run \`/discover\` and \`/research\` before writing specs.
+2. **Spec before code.** Run \`/spec\` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run \`/sync-docs\` to keep everything in sync.
+8. **Log sessions.** After meaningful work, \`/sync-docs\` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run \`/iterate <component>\` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update \`.claude/rules/design-system.md\`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant \`.claude/rules/\` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| \`/start-session\` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| \`/discover\` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| \`/research <topic>\` | Discovery | Deep competitive and technical research on a topic. |
+| \`/spec <feature>\` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| \`/plan-feature <feature>\` | Specification | Break a spec into implementable tasks with dependencies. |
+| \`/adr <decision>\` | Architecture | Create an Architecture Decision Record. |
+| \`/plan-review\` | Architecture | Challenge a plan with engineering rigor. |
+| \`/new-feature <name>\` | Development | Scaffold a new feature across the relevant stack(s). |
+| \`/commit\` | Development | Stage, validate, and create a conventional commit. |
+| \`/self-review\` | Review | Run comprehensive self-review on current changes. |
+| \`/iterate <component>\` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| \`/sync-docs\` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| \`/local-setup\` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| \`/deploy\` | Deployment | Trigger a release workflow. |
+| \`/design-review\` | Review UI changes against the design system quality bar. |
+| \`/figma-sync\` | Sync components/tokens between code and Figma. |
+| \`/figma-implement\` | Implement a Figma design as production code. |
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| \`product-analyst\` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| \`phase-gate\` | sonnet | Validates phase completeness before transitions |
+| \`architect\` | opus | Designing features, making architectural decisions |
+| \`code-reviewer\` | opus | Reviewing PRs and code changes |
+| \`security-auditor\` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| \`test-writer\` | sonnet | Generating tests for existing or new code |
+| \`performance-analyst\` | sonnet | N+1 detection, bundle analysis, API profiling |
+| \`refactoring-specialist\` | sonnet | Systematic refactors with test gates |
+| \`react-architect\` | sonnet | React component design, RSC patterns, hooks |
+| \`design-reviewer\` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+
+## Forbidden actions
+
+- **NEVER** run \`git push --force\` to \`main\` or \`master\`.
+- **NEVER** run \`rm -rf /\`, \`rm -rf ~\`, or \`rm -rf .\` outside of \`node_modules\`/\`dist\`.
+- **NEVER** modify \`.env\` files directly. Only modify \`.env.example\`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit \`node_modules\`, \`dist\`, \`.next\`, or build artifacts.
+- **NEVER** use \`any\` in TypeScript. Use \`unknown\` and narrow.
+- **NEVER** skip the pre-commit hook with \`--no-verify\`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from \`@acme/design-tokens\`.
+- **NEVER** use inline \`style={{}}\` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+"
+`;
+
+exports[`generateProject: fullstack-mobile > matches golden output for key files > nx.json 1`] = `
+"{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)",
+      "!{projectRoot}/coverage/**",
+      "!{projectRoot}/tsconfig.spec.json"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/biome.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "cache": true
+    },
+    "lint": {
+      "inputs": ["default"],
+      "cache": true
+    },
+    "typecheck": {
+      "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
+"
+`;
+
+exports[`generateProject: fullstack-mobile > matches golden output for key files > package.json 1`] = `
+"{
+  "name": "acme",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "clean": "nx run-many -t clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "nx": "^20.8.0"
+  }
+}
+"
+`;
+
+exports[`generateProject: fullstack-mobile > matches the generated file manifest 1`] = `
+[
+  ".claude/README.md",
+  ".claude/agents/architect.md",
+  ".claude/agents/code-reviewer.md",
+  ".claude/agents/design-reviewer.md",
+  ".claude/agents/performance-analyst.md",
+  ".claude/agents/phase-gate.md",
+  ".claude/agents/product-analyst.md",
+  ".claude/agents/react-architect.md",
+  ".claude/agents/refactoring-specialist.md",
+  ".claude/agents/security-auditor.md",
+  ".claude/agents/test-writer.md",
+  ".claude/feedback/README.md",
+  ".claude/hints.txt",
+  ".claude/hooks/block-dangerous-bash.cjs",
+  ".claude/hooks/capture-feedback.cjs",
+  ".claude/hooks/format-on-edit.cjs",
+  ".claude/hooks/session-context.cjs",
+  ".claude/rules/backend-node.md",
+  ".claude/rules/database.md",
+  ".claude/rules/design-system.md",
+  ".claude/rules/frontend.md",
+  ".claude/rules/mobile.md",
+  ".claude/rules/testing.md",
+  ".claude/settings.json",
+  ".claude/skills/adr/SKILL.md",
+  ".claude/skills/commit/SKILL.md",
+  ".claude/skills/deploy/SKILL.md",
+  ".claude/skills/design-review/SKILL.md",
+  ".claude/skills/discover/SKILL.md",
+  ".claude/skills/feedback-review/SKILL.md",
+  ".claude/skills/figma-implement/SKILL.md",
+  ".claude/skills/figma-sync/SKILL.md",
+  ".claude/skills/iterate/SKILL.md",
+  ".claude/skills/local-setup/SKILL.md",
+  ".claude/skills/new-feature/SKILL.md",
+  ".claude/skills/plan-feature/SKILL.md",
+  ".claude/skills/plan-review/SKILL.md",
+  ".claude/skills/research/SKILL.md",
+  ".claude/skills/self-review/SKILL.md",
+  ".claude/skills/spec/SKILL.md",
+  ".claude/skills/start-session/SKILL.md",
+  ".claude/skills/sync-docs/SKILL.md",
+  ".claude/welcome-message.md",
+  ".editorconfig",
+  ".env.example",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  ".mcp.json",
+  ".npmrc",
+  ".tool-versions",
+  "CLAUDE.md",
+  "NEXT_STEPS.md",
+  "PROJECT_STATUS.md",
+  "SESSION_LOG.md",
+  "apps/api/CLAUDE.md",
+  "apps/api/nest-cli.json",
+  "apps/api/package.json",
+  "apps/api/src/app.module.ts",
+  "apps/api/src/common/filters/http-exception.filter.ts",
+  "apps/api/src/common/interceptors/transform.interceptor.ts",
+  "apps/api/src/config/env.config.ts",
+  "apps/api/src/health/health.controller.ts",
+  "apps/api/src/health/health.module.ts",
+  "apps/api/src/main.ts",
+  "apps/api/tsconfig.json",
+  "apps/api/vitest.config.ts",
+  "apps/mobile/CLAUDE.md",
+  "apps/mobile/app.json",
+  "apps/mobile/app/_layout.tsx",
+  "apps/mobile/app/index.tsx",
+  "apps/mobile/package.json",
+  "apps/mobile/tsconfig.json",
+  "apps/web/CLAUDE.md",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/lib/api/client.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vitest.config.ts",
+  "biome.json",
+  "db/drizzle.config.ts",
+  "db/migrations/.gitkeep",
+  "db/package.json",
+  "db/schema/index.ts",
+  "db/schema/users.ts",
+  "db/seed.ts",
+  "docs/README.md",
+  "docs/adr/0001-initial-architecture.md",
+  "docs/product/PRD.md",
+  "docs/research/_TEMPLATE.md",
+  "docs/specs/_TEMPLATE.md",
+  "nx.json",
+  "package.json",
+  "packages/design-tokens/index.ts",
+  "packages/design-tokens/motion.ts",
+  "packages/design-tokens/package.json",
+  "packages/design-tokens/tokens.css",
+  "packages/types/src/index.ts",
+  "packages/ui/code-connect.ts",
+  "packages/ui/package.json",
+  "packages/ui/src/badge/badge.tsx",
+  "packages/ui/src/badge/index.ts",
+  "packages/ui/src/button/button.tsx",
+  "packages/ui/src/button/index.ts",
+  "packages/ui/src/card/card.tsx",
+  "packages/ui/src/card/index.ts",
+  "packages/ui/src/component-meta.ts",
+  "packages/ui/src/index.ts",
+  "packages/ui/src/input/index.ts",
+  "packages/ui/src/input/input.tsx",
+  "packages/ui/src/primitives/cn.ts",
+  "packages/ui/src/primitives/motion-config.ts",
+  "pnpm-workspace.yaml",
+  "tsconfig.base.json",
+]
+`;
+
+exports[`generateProject: solo-saas > matches golden output for key files > .claude/settings.json 1`] = `
+"{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-context.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/capture-feedback.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(nx:*)",
+      "Bash(npx:*)",
+      "Bash(biome:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git stash list*)",
+      "Bash(git rev-list*)",
+      "Bash(git symbolic-ref*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)"
+    ]
+  }
+}
+"
+`;
+
+exports[`generateProject: solo-saas > matches golden output for key files > CLAUDE.md 1`] = `
+"# Acme
+
+## Starting a fresh session
+
+Run \`/start-session\` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+Acme application This is a solo-team project built by a solo developer using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in \`libs/\`.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend (web) | Next.js 15 (App Router, RSC, Server Actions) |
+| Backend (api) | NestJS 11 (Node.js) |
+| Database | PostgreSQL |
+| ORM (Node.js) | Drizzle |
+| Auth | Clerk |
+| API style | REST |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | Vercel + Fly.io |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| \`CLAUDE.md\` (this file) | Always loaded -- project-wide constitution |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Next.js rules |
+| \`.claude/rules/backend-node.md\` | \`apps/*/src/**/*.ts\` -- NestJS rules |
+| \`.claude/rules/database.md\` | \`db/**/*\` -- Database & migration rules |
+| \`.claude/rules/testing.md\` | \`**/*.{test,spec}.{ts,tsx,go}\` -- Testing rules |
+| \`.claude/rules/design-system.md\` | \`packages/ui/**\`, \`packages/design-tokens/**\`, \`*/components/**\` -- Design system rules |
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in \`libs/\`. Each lib has a barrel \`index.ts\`.
+- Import from libs using workspace aliases (\`@acme/lib-name\`), never relative \`../\` paths.
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: \`foo.ts\` -> \`foo.test.ts\`, \`foo.go\` -> \`foo_test.go\`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via \`.env\` (gitignored) and \`.env.example\` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+- Auth is handled by Clerk. Never roll custom auth middleware.
+
+### Commits
+- Use **Conventional Commits**: \`type(scope): message\`
+- Types: \`feat\`, \`fix\`, \`refactor\`, \`test\`, \`docs\`, \`chore\`, \`ci\`, \`perf\`
+- Scope = app or lib name (e.g., \`feat(web): add dashboard page\`)
+- Never skip pre-commit hooks (\`--no-verify\` is forbidden).
+
+## Project lifecycle
+
+This project follows a phased approach. Check \`PROJECT_STATUS.md\` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | \`/discover\`, \`/research\` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | \`/spec\`, \`/plan-feature\` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | \`/adr\`, \`/plan-review\` | ADRs for key decisions, schema finalized |
+| **Development** | \`/new-feature\`, \`/commit\`, \`/self-review\` | Acceptance criteria met, tests passing |
+| **Review** | \`/self-review\`, \`/design-review\`, \`/sync-docs\` | All gates passed, docs in sync |
+| **Deployment** | \`/deploy\`, \`/local-setup doctor\` | Staging verified, monitoring configured |
+
+Run the \`phase-gate\` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run \`/discover\` to validate the product idea and gather requirements
+2. Run \`/research <competitor>\` to understand the competitive landscape
+3. Run \`/spec <feature>\` for each MVP feature
+4. Run \`/plan-feature <feature>\` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run \`/discover\` and \`/research\` before writing specs.
+2. **Spec before code.** Run \`/spec\` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run \`/sync-docs\` to keep everything in sync.
+8. **Log sessions.** After meaningful work, \`/sync-docs\` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run \`/iterate <component>\` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update \`.claude/rules/design-system.md\`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant \`.claude/rules/\` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| \`/start-session\` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| \`/discover\` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| \`/research <topic>\` | Discovery | Deep competitive and technical research on a topic. |
+| \`/spec <feature>\` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| \`/plan-feature <feature>\` | Specification | Break a spec into implementable tasks with dependencies. |
+| \`/adr <decision>\` | Architecture | Create an Architecture Decision Record. |
+| \`/plan-review\` | Architecture | Challenge a plan with engineering rigor. |
+| \`/new-feature <name>\` | Development | Scaffold a new feature across the relevant stack(s). |
+| \`/commit\` | Development | Stage, validate, and create a conventional commit. |
+| \`/self-review\` | Review | Run comprehensive self-review on current changes. |
+| \`/iterate <component>\` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| \`/sync-docs\` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| \`/local-setup\` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| \`/deploy\` | Deployment | Trigger a release workflow. |
+| \`/design-review\` | Review UI changes against the design system quality bar. |
+| \`/figma-sync\` | Sync components/tokens between code and Figma. |
+| \`/figma-implement\` | Implement a Figma design as production code. |
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| \`product-analyst\` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| \`phase-gate\` | sonnet | Validates phase completeness before transitions |
+| \`architect\` | opus | Designing features, making architectural decisions |
+| \`code-reviewer\` | opus | Reviewing PRs and code changes |
+| \`security-auditor\` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| \`test-writer\` | sonnet | Generating tests for existing or new code |
+| \`performance-analyst\` | sonnet | N+1 detection, bundle analysis, API profiling |
+| \`refactoring-specialist\` | sonnet | Systematic refactors with test gates |
+| \`react-architect\` | sonnet | React component design, RSC patterns, hooks |
+| \`design-reviewer\` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+
+## Forbidden actions
+
+- **NEVER** run \`git push --force\` to \`main\` or \`master\`.
+- **NEVER** run \`rm -rf /\`, \`rm -rf ~\`, or \`rm -rf .\` outside of \`node_modules\`/\`dist\`.
+- **NEVER** modify \`.env\` files directly. Only modify \`.env.example\`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit \`node_modules\`, \`dist\`, \`.next\`, or build artifacts.
+- **NEVER** use \`any\` in TypeScript. Use \`unknown\` and narrow.
+- **NEVER** skip the pre-commit hook with \`--no-verify\`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from \`@acme/design-tokens\`.
+- **NEVER** use inline \`style={{}}\` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+"
+`;
+
+exports[`generateProject: solo-saas > matches golden output for key files > nx.json 1`] = `
+"{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)",
+      "!{projectRoot}/coverage/**",
+      "!{projectRoot}/tsconfig.spec.json"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/biome.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "cache": true
+    },
+    "lint": {
+      "inputs": ["default"],
+      "cache": true
+    },
+    "typecheck": {
+      "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
+"
+`;
+
+exports[`generateProject: solo-saas > matches golden output for key files > package.json 1`] = `
+"{
+  "name": "acme",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "clean": "nx run-many -t clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "nx": "^20.8.0"
+  }
+}
+"
+`;
+
+exports[`generateProject: solo-saas > matches the generated file manifest 1`] = `
+[
+  ".claude/README.md",
+  ".claude/agents/architect.md",
+  ".claude/agents/code-reviewer.md",
+  ".claude/agents/design-reviewer.md",
+  ".claude/agents/performance-analyst.md",
+  ".claude/agents/phase-gate.md",
+  ".claude/agents/product-analyst.md",
+  ".claude/agents/react-architect.md",
+  ".claude/agents/refactoring-specialist.md",
+  ".claude/agents/security-auditor.md",
+  ".claude/agents/test-writer.md",
+  ".claude/feedback/README.md",
+  ".claude/hints.txt",
+  ".claude/hooks/block-dangerous-bash.cjs",
+  ".claude/hooks/capture-feedback.cjs",
+  ".claude/hooks/format-on-edit.cjs",
+  ".claude/hooks/session-context.cjs",
+  ".claude/rules/backend-node.md",
+  ".claude/rules/database.md",
+  ".claude/rules/design-system.md",
+  ".claude/rules/frontend.md",
+  ".claude/rules/testing.md",
+  ".claude/settings.json",
+  ".claude/skills/adr/SKILL.md",
+  ".claude/skills/commit/SKILL.md",
+  ".claude/skills/deploy/SKILL.md",
+  ".claude/skills/design-review/SKILL.md",
+  ".claude/skills/discover/SKILL.md",
+  ".claude/skills/feedback-review/SKILL.md",
+  ".claude/skills/figma-implement/SKILL.md",
+  ".claude/skills/figma-sync/SKILL.md",
+  ".claude/skills/iterate/SKILL.md",
+  ".claude/skills/local-setup/SKILL.md",
+  ".claude/skills/new-feature/SKILL.md",
+  ".claude/skills/plan-feature/SKILL.md",
+  ".claude/skills/plan-review/SKILL.md",
+  ".claude/skills/research/SKILL.md",
+  ".claude/skills/self-review/SKILL.md",
+  ".claude/skills/spec/SKILL.md",
+  ".claude/skills/start-session/SKILL.md",
+  ".claude/skills/sync-docs/SKILL.md",
+  ".claude/welcome-message.md",
+  ".editorconfig",
+  ".env.example",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  ".mcp.json",
+  ".npmrc",
+  ".tool-versions",
+  "CLAUDE.md",
+  "NEXT_STEPS.md",
+  "PROJECT_STATUS.md",
+  "SESSION_LOG.md",
+  "apps/api/CLAUDE.md",
+  "apps/api/nest-cli.json",
+  "apps/api/package.json",
+  "apps/api/src/app.module.ts",
+  "apps/api/src/common/filters/http-exception.filter.ts",
+  "apps/api/src/common/interceptors/transform.interceptor.ts",
+  "apps/api/src/config/env.config.ts",
+  "apps/api/src/health/health.controller.ts",
+  "apps/api/src/health/health.module.ts",
+  "apps/api/src/main.ts",
+  "apps/api/tsconfig.json",
+  "apps/api/vitest.config.ts",
+  "apps/web/CLAUDE.md",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/lib/api/client.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vitest.config.ts",
+  "biome.json",
+  "db/drizzle.config.ts",
+  "db/migrations/.gitkeep",
+  "db/package.json",
+  "db/schema/index.ts",
+  "db/schema/users.ts",
+  "db/seed.ts",
+  "docs/README.md",
+  "docs/adr/0001-initial-architecture.md",
+  "docs/product/PRD.md",
+  "docs/research/_TEMPLATE.md",
+  "docs/specs/_TEMPLATE.md",
+  "nx.json",
+  "package.json",
+  "packages/design-tokens/index.ts",
+  "packages/design-tokens/motion.ts",
+  "packages/design-tokens/package.json",
+  "packages/design-tokens/tokens.css",
+  "packages/types/src/index.ts",
+  "packages/ui/code-connect.ts",
+  "packages/ui/package.json",
+  "packages/ui/src/badge/badge.tsx",
+  "packages/ui/src/badge/index.ts",
+  "packages/ui/src/button/button.tsx",
+  "packages/ui/src/button/index.ts",
+  "packages/ui/src/card/card.tsx",
+  "packages/ui/src/card/index.ts",
+  "packages/ui/src/component-meta.ts",
+  "packages/ui/src/index.ts",
+  "packages/ui/src/input/index.ts",
+  "packages/ui/src/input/input.tsx",
+  "packages/ui/src/primitives/cn.ts",
+  "packages/ui/src/primitives/motion-config.ts",
+  "pnpm-workspace.yaml",
+  "tsconfig.base.json",
+]
+`;
+
+exports[`generateProject: team-platform > matches golden output for key files > .claude/settings.json 1`] = `
+"{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-bash.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.cjs",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-context.cjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/capture-feedback.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(nx:*)",
+      "Bash(npx:*)",
+      "Bash(biome:*)",
+      "Bash(vitest:*)",
+      "Bash(playwright:*)",
+      "Bash(tsc:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git stash list*)",
+      "Bash(git rev-list*)",
+      "Bash(git symbolic-ref*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh workflow *)",
+      "Bash(go:*)",
+      "Bash(go test*)",
+      "Bash(go build*)",
+      "Bash(go vet*)",
+      "Bash(golangci-lint:*)",
+      "Bash(gofumpt:*)",
+      "Bash(sqlc:*)",
+      "Bash(goose:*)",
+      "Bash(docker compose -f infra/*)",
+      "Bash(docker compose ps*)"
+    ]
+  }
+}
+"
+`;
+
+exports[`generateProject: team-platform > matches golden output for key files > CLAUDE.md 1`] = `
+"# Acme
+
+## Starting a fresh session
+
+Run \`/start-session\` before doing anything else. It reads SESSION_LOG and NEXT_STEPS, checks git state, and prints a 5-line briefing so you know exactly where things stand.
+
+## Project context
+
+Acme application This is a team-team project built by a mid-size team using an Nx monorepo. The codebase follows strict module boundaries -- every app and service is independent, with shared code living in \`libs/\`. Multi-tenancy is implemented via row-level isolation. Internationalization is enabled with locales: en, ar.
+
+## Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend (web) | Next.js 15 (App Router, RSC, Server Actions) |
+| Frontend (admin) | Vite + React 19 (SPA) |
+| Backend (api) | Go (Chi, hexagonal architecture) |
+| Backend (worker) | Go (Chi, hexagonal architecture) |
+| Database | PostgreSQL |
+| ORM (Go) | sqlc |
+| Auth | Clerk |
+| API style | REST |
+| Monorepo | Nx + pnpm workspaces |
+| Formatting | Biome |
+| CI | GitHub Actions |
+| Hosting | Vercel + Fly.io |
+
+## Where rules live
+
+Rules auto-load by glob. Never duplicate rules -- edit the canonical file.
+
+| File | Scope |
+|------|-------|
+| \`CLAUDE.md\` (this file) | Always loaded -- project-wide constitution |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Next.js rules |
+| \`.claude/rules/frontend.md\` | \`apps/*/src/**/*.{ts,tsx}\` -- React / Vite rules |
+| \`.claude/rules/backend-go.md\` | \`services/**/*.go\` -- Go rules |
+| \`.claude/rules/database.md\` | \`db/**/*\` -- Database & migration rules |
+| \`.claude/rules/testing.md\` | \`**/*.{test,spec}.{ts,tsx,go}\` -- Testing rules |
+| \`.claude/rules/design-system.md\` | \`packages/ui/**\`, \`packages/design-tokens/**\`, \`*/components/**\` -- Design system rules |
+
+## Always-true rules
+
+### Module boundaries
+- Apps and services are **independent**. No app may import from another app.
+- Shared code goes in \`libs/\`. Each lib has a barrel \`index.ts\`.
+- Import from libs using workspace aliases (\`@acme/lib-name\`), never relative \`../\` paths.
+
+### File size limits
+- TypeScript / TSX: **250 lines max**. Split or extract.
+- Go files: **400 lines max**. Split into focused files.
+- C# files: **300 lines max**. One class per file.
+- If a file exceeds the limit, refactor before adding more code.
+
+### No god files
+- No file may export more than 7 public symbols.
+- No barrel file may re-export from more than 10 modules.
+- No React component file may define more than 1 exported component.
+
+### Tests
+- Every new public function, endpoint, or component **must** ship with tests.
+- Minimum coverage gate: 80% on new code.
+- Test files live next to source: \`foo.ts\` -> \`foo.test.ts\`, \`foo.go\` -> \`foo_test.go\`.
+
+### Security
+- **Never** commit secrets, tokens, API keys, or credentials.
+- Use environment variables via \`.env\` (gitignored) and \`.env.example\` (committed).
+- Validate all external input at the boundary (API routes, form handlers).
+- Sanitize data before rendering to prevent XSS.
+- Auth is handled by Clerk. Never roll custom auth middleware.
+
+### Commits
+- Use **Conventional Commits**: \`type(scope): message\`
+- Types: \`feat\`, \`fix\`, \`refactor\`, \`test\`, \`docs\`, \`chore\`, \`ci\`, \`perf\`
+- Scope = app or lib name (e.g., \`feat(web): add dashboard page\`)
+- Never skip pre-commit hooks (\`--no-verify\` is forbidden).
+
+### Multi-tenancy
+- Tenancy model: **row-level**
+- Every DB table that holds tenant data **must** have a \`tenant_id\` column.
+- Every query against tenant data **must** filter by \`tenant_id\`. No exceptions.
+- Never expose data across tenant boundaries. Test with multiple tenants.
+
+### Internationalization
+- All user-facing strings go through the i18n system. Never hard-code UI text.
+- Supported locales: en, ar
+- Translation keys use dot notation: \`feature.component.label\`
+- New features must include translations for all supported locales.
+
+## Project lifecycle
+
+This project follows a phased approach. Check \`PROJECT_STATUS.md\` for current phase.
+
+| Phase | Key Skills | Gate |
+|-------|-----------|------|
+| **Discovery** | \`/discover\`, \`/research\` | PRD complete, MVP scoped, competitors researched |
+| **Specification** | \`/spec\`, \`/plan-feature\` | Feature specs with acceptance criteria, data model, API design |
+| **Architecture** | \`/adr\`, \`/plan-review\` | ADRs for key decisions, schema finalized |
+| **Development** | \`/new-feature\`, \`/commit\`, \`/self-review\` | Acceptance criteria met, tests passing |
+| **Review** | \`/self-review\`, \`/design-review\`, \`/sync-docs\` | All gates passed, docs in sync |
+| **Deployment** | \`/deploy\`, \`/local-setup doctor\` | Staging verified, monitoring configured |
+
+Run the \`phase-gate\` agent before transitioning between phases. It validates completeness.
+
+**Before writing any code:**
+1. Run \`/discover\` to validate the product idea and gather requirements
+2. Run \`/research <competitor>\` to understand the competitive landscape
+3. Run \`/spec <feature>\` for each MVP feature
+4. Run \`/plan-feature <feature>\` to break specs into tasks
+
+## Workflow rules
+
+1. **Discover before spec.** Run \`/discover\` and \`/research\` before writing specs.
+2. **Spec before code.** Run \`/spec\` and get acceptance criteria before implementing.
+3. **Read before writing.** Always read a file before editing it. Understand context.
+4. **Plan before coding.** For changes touching 3+ files, write a brief plan first.
+5. **Small, focused changes.** One logical change per commit. No kitchen-sink PRs.
+6. **Run tests before committing.** If tests fail, fix them before pushing.
+7. **Update docs.** If behavior changes, run \`/sync-docs\` to keep everything in sync.
+8. **Log sessions.** After meaningful work, \`/sync-docs\` updates SESSION_LOG automatically.
+9. **Save learnings.** When something goes wrong or a pattern works well, save it to memory for future sessions.
+
+## Feedback capture (critical)
+
+The system learns from every interaction. Follow these rules **automatically** — do not wait for the developer to ask:
+
+### When the developer corrects you
+- If they say "no", "don't do that", "revert", "I don't like this" → **immediately save a feedback memory** explaining what went wrong and what they prefer instead.
+- The memory must be specific: "Developer prefers X over Y because Z" — not just "changed X".
+- Check existing memories before making the same type of decision again.
+
+### When the developer doesn't like a UI/design
+- Run \`/iterate <component>\` to explore alternatives with visual examples.
+- Present 2-3 options before making changes. Never assume what they want.
+- After they confirm, save the design preference to memory.
+- If the preference is broad (applies to all similar components), update \`.claude/rules/design-system.md\`.
+
+### When a bug is found
+- Save a memory describing: what caused the bug, how it was fixed, and what pattern to avoid.
+- If the bug reveals a missing rule, add the rule to the relevant \`.claude/rules/\` file.
+- Write a regression test that would have caught the bug.
+
+### When a pattern works well
+- If the developer confirms something was done right (especially a non-obvious choice), save a positive feedback memory.
+- Example: "Single bundled PR was the right call for this refactor — don't split small refactors unnecessarily."
+
+## Token-efficiency rules
+
+- Do NOT re-read files you have already read in this session unless they changed.
+- Do NOT output entire file contents when making small edits. Use targeted edits.
+- Do NOT explain code you just wrote unless asked. The code should be self-documenting.
+- Keep responses concise. No filler phrases or unnecessary commentary.
+- When searching, use targeted globs rather than recursive full-tree scans.
+
+## Skills
+
+| Skill | Phase | Description |
+|-------|-------|-------------|
+| \`/start-session\` | Any | Read SESSION_LOG + NEXT_STEPS + git state. Print 5-line briefing. |
+| \`/discover\` | Discovery | Guided product discovery with competitive research. Generates PRD. |
+| \`/research <topic>\` | Discovery | Deep competitive and technical research on a topic. |
+| \`/spec <feature>\` | Specification | Create detailed feature spec with user stories and acceptance criteria. |
+| \`/plan-feature <feature>\` | Specification | Break a spec into implementable tasks with dependencies. |
+| \`/adr <decision>\` | Architecture | Create an Architecture Decision Record. |
+| \`/plan-review\` | Architecture | Challenge a plan with engineering rigor. |
+| \`/new-feature <name>\` | Development | Scaffold a new feature across the relevant stack(s). |
+| \`/commit\` | Development | Stage, validate, and create a conventional commit. |
+| \`/self-review\` | Review | Run comprehensive self-review on current changes. |
+| \`/iterate <component>\` | Development | Iterate on UI based on feedback — shows alternatives, saves preferences. |
+| \`/sync-docs\` | Any | Comprehensive document sync — detects drift, updates all docs. |
+| \`/local-setup\` | Any | Bootstrap, doctor, or reset the local dev environment. |
+| \`/deploy\` | Deployment | Trigger a release workflow. |
+| \`/design-review\` | Review UI changes against the design system quality bar. |
+| \`/figma-sync\` | Sync components/tokens between code and Figma. |
+| \`/figma-implement\` | Implement a Figma design as production code. |
+
+## Sub-agents
+
+| Agent | Model | Use for |
+|-------|-------|---------|
+| \`product-analyst\` | opus | Identifies requirement gaps, edge cases, missing business logic |
+| \`phase-gate\` | sonnet | Validates phase completeness before transitions |
+| \`architect\` | opus | Designing features, making architectural decisions |
+| \`code-reviewer\` | opus | Reviewing PRs and code changes |
+| \`security-auditor\` | sonnet | OWASP checks, auth flow analysis, secrets scanning |
+| \`test-writer\` | sonnet | Generating tests for existing or new code |
+| \`performance-analyst\` | sonnet | N+1 detection, bundle analysis, API profiling |
+| \`refactoring-specialist\` | sonnet | Systematic refactors with test gates |
+| \`react-architect\` | sonnet | React component design, RSC patterns, hooks |
+| \`react-architect\` | sonnet | React component design, state management, hooks |
+| \`go-expert\` | sonnet | Go concurrency, error handling, performance |
+| \`design-reviewer\` | sonnet | Design system compliance, accessibility, token usage, visual consistency |
+
+## Forbidden actions
+
+- **NEVER** run \`git push --force\` to \`main\` or \`master\`.
+- **NEVER** run \`rm -rf /\`, \`rm -rf ~\`, or \`rm -rf .\` outside of \`node_modules\`/\`dist\`.
+- **NEVER** modify \`.env\` files directly. Only modify \`.env.example\`.
+- **NEVER** disable TypeScript strict mode or ESLint/Biome rules.
+- **NEVER** commit \`node_modules\`, \`dist\`, \`.next\`, or build artifacts.
+- **NEVER** use \`any\` in TypeScript. Use \`unknown\` and narrow.
+- **NEVER** skip the pre-commit hook with \`--no-verify\`.
+- **NEVER** write to files outside the project root.
+- **NEVER** install packages globally. Use project-local dependencies.
+- **NEVER** store secrets in code, config files, or commit history.
+- **NEVER** hardcode colors (hex/rgb/hsl). Use design tokens from \`@acme/design-tokens\`.
+- **NEVER** use inline \`style={{}}\` on React components. Use Tailwind + tokens.
+- **NEVER** skip accessibility — keyboard nav, focus states, contrast ratios are mandatory.
+"
+`;
+
+exports[`generateProject: team-platform > matches golden output for key files > nx.json 1`] = `
+"{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)",
+      "!{projectRoot}/coverage/**",
+      "!{projectRoot}/tsconfig.spec.json"
+    ],
+    "sharedGlobals": ["{workspaceRoot}/tsconfig.base.json", "{workspaceRoot}/biome.json"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
+      "cache": true
+    },
+    "test": {
+      "inputs": ["default", "^production"],
+      "cache": true
+    },
+    "lint": {
+      "inputs": ["default"],
+      "cache": true
+    },
+    "typecheck": {
+      "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "plugins": ["@nx-go/nx-go"]
+}
+"
+`;
+
+exports[`generateProject: team-platform > matches golden output for key files > package.json 1`] = `
+"{
+  "name": "acme",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "typecheck": "nx run-many -t typecheck",
+    "clean": "nx run-many -t clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "nx": "^20.8.0"
+  }
+}
+"
+`;
+
+exports[`generateProject: team-platform > matches the generated file manifest 1`] = `
+[
+  ".claude/README.md",
+  ".claude/agents/architect.md",
+  ".claude/agents/code-reviewer.md",
+  ".claude/agents/design-reviewer.md",
+  ".claude/agents/go-expert.md",
+  ".claude/agents/performance-analyst.md",
+  ".claude/agents/phase-gate.md",
+  ".claude/agents/product-analyst.md",
+  ".claude/agents/react-architect.md",
+  ".claude/agents/refactoring-specialist.md",
+  ".claude/agents/security-auditor.md",
+  ".claude/agents/test-writer.md",
+  ".claude/feedback/README.md",
+  ".claude/hints.txt",
+  ".claude/hooks/block-dangerous-bash.cjs",
+  ".claude/hooks/capture-feedback.cjs",
+  ".claude/hooks/format-on-edit.cjs",
+  ".claude/hooks/session-context.cjs",
+  ".claude/rules/backend-go.md",
+  ".claude/rules/database.md",
+  ".claude/rules/design-system.md",
+  ".claude/rules/frontend.md",
+  ".claude/rules/testing.md",
+  ".claude/settings.json",
+  ".claude/skills/adr/SKILL.md",
+  ".claude/skills/commit/SKILL.md",
+  ".claude/skills/deploy/SKILL.md",
+  ".claude/skills/design-review/SKILL.md",
+  ".claude/skills/discover/SKILL.md",
+  ".claude/skills/feedback-review/SKILL.md",
+  ".claude/skills/figma-implement/SKILL.md",
+  ".claude/skills/figma-sync/SKILL.md",
+  ".claude/skills/iterate/SKILL.md",
+  ".claude/skills/local-setup/SKILL.md",
+  ".claude/skills/new-feature/SKILL.md",
+  ".claude/skills/plan-feature/SKILL.md",
+  ".claude/skills/plan-review/SKILL.md",
+  ".claude/skills/research/SKILL.md",
+  ".claude/skills/self-review/SKILL.md",
+  ".claude/skills/spec/SKILL.md",
+  ".claude/skills/start-session/SKILL.md",
+  ".claude/skills/sync-docs/SKILL.md",
+  ".claude/welcome-message.md",
+  ".editorconfig",
+  ".env.example",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  ".golangci.yml",
+  ".mcp.json",
+  ".npmrc",
+  ".tool-versions",
+  "CLAUDE.md",
+  "Makefile",
+  "NEXT_STEPS.md",
+  "PROJECT_STATUS.md",
+  "SESSION_LOG.md",
+  "apps/admin/CLAUDE.md",
+  "apps/admin/index.html",
+  "apps/admin/package.json",
+  "apps/admin/src/app.tsx",
+  "apps/admin/src/index.css",
+  "apps/admin/src/main.tsx",
+  "apps/admin/tsconfig.json",
+  "apps/admin/vite.config.ts",
+  "apps/admin/vitest.config.ts",
+  "apps/web/CLAUDE.md",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/globals.css",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/lib/api/client.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vitest.config.ts",
+  "biome.json",
+  "db/generated/.gitkeep",
+  "db/migrations/00001_initial.sql",
+  "db/queries/users.sql",
+  "db/sqlc.yaml",
+  "docs/README.md",
+  "docs/adr/0001-initial-architecture.md",
+  "docs/product/PRD.md",
+  "docs/research/_TEMPLATE.md",
+  "docs/specs/_TEMPLATE.md",
+  "go.work",
+  "infra/docker/docker-compose.yml",
+  "nx.json",
+  "package.json",
+  "packages/design-tokens/index.ts",
+  "packages/design-tokens/motion.ts",
+  "packages/design-tokens/package.json",
+  "packages/design-tokens/tokens.css",
+  "packages/types/src/index.ts",
+  "packages/ui/code-connect.ts",
+  "packages/ui/package.json",
+  "packages/ui/src/badge/badge.tsx",
+  "packages/ui/src/badge/index.ts",
+  "packages/ui/src/button/button.tsx",
+  "packages/ui/src/button/index.ts",
+  "packages/ui/src/card/card.tsx",
+  "packages/ui/src/card/index.ts",
+  "packages/ui/src/component-meta.ts",
+  "packages/ui/src/index.ts",
+  "packages/ui/src/input/index.ts",
+  "packages/ui/src/input/input.tsx",
+  "packages/ui/src/primitives/cn.ts",
+  "packages/ui/src/primitives/motion-config.ts",
+  "pnpm-workspace.yaml",
+  "services/api/adapters/http/handler.go",
+  "services/api/adapters/postgres/repository.go",
+  "services/api/domain/errors.go",
+  "services/api/domain/models.go",
+  "services/api/go.mod",
+  "services/api/ports/repository.go",
+  "services/api/service.go",
+  "services/api/service_test.go",
+  "services/api/usecase/usecase.go",
+  "services/worker/adapters/http/handler.go",
+  "services/worker/adapters/postgres/repository.go",
+  "services/worker/domain/errors.go",
+  "services/worker/domain/models.go",
+  "services/worker/go.mod",
+  "services/worker/ports/repository.go",
+  "services/worker/service.go",
+  "services/worker/service_test.go",
+  "services/worker/usecase/usecase.go",
+  "tsconfig.base.json",
+]
+`;

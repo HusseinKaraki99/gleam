@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "{{project.displayName}}",
+    "slug": "{{kebabCase name}}",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "{{kebabCase name}}",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.{{kebabCase config.name}}.{{kebabCase name}}"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.{{kebabCase config.name}}.{{kebabCase name}}"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

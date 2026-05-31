@@ -1,0 +1,89 @@
+---
+name: plan-review
+description: Challenge a proposed plan with engineering rigor before committing to implementation. Evaluates scope, boundaries, dependencies, testing, security, and reversibility.
+user-invocable: true
+allowed-tools: Bash, Read, Grep
+---
+
+# Plan Review
+
+Challenge a proposed implementation plan before coding begins. This is a gate to catch issues early, when they are cheap to fix.
+
+## Review dimensions
+
+Evaluate the plan against each dimension. For each, assign a verdict.
+
+### 1. Scope
+- Is this the smallest change that solves the stated problem?
+- Are there non-goals explicitly listed?
+- Could this be split into smaller, independently shippable pieces?
+- Is there scope creep (features not in the original requirement)?
+
+### 2. Module boundaries
+- Does the plan respect the module boundaries defined in `CLAUDE.md`?
+- Does it introduce cross-app imports?
+- Does shared code go in `libs/`?
+{{#if config.isPolyglot}}
+- If touching both Go and Node.js, do they communicate only via APIs?
+{{/if}}
+
+### 3. Dependencies
+- Does it introduce new third-party dependencies? Are they justified?
+- Are the dependencies actively maintained, well-tested, and appropriately licensed?
+- Could the functionality be achieved without a new dependency?
+
+### 4. Testing
+- Is the test plan sufficient for the risk level?
+- What edge cases are missing?
+- Are integration tests needed? Are they planned?
+- What is the testing strategy for error paths?
+
+### 5. Migration & backward compatibility
+- If changing existing behavior, is there a migration plan?
+- Can the change be deployed without downtime?
+- Is there a feature flag for gradual rollout?
+{{#ifMultiTenancy config}}
+- How does the migration handle existing tenant data?
+{{/ifMultiTenancy}}
+
+### 6. Performance
+- Will this degrade performance? Under what load?
+- Are there N+1 query risks?
+- What is the expected database impact?
+- Does it affect frontend bundle size?
+
+### 7. Security
+- Does it introduce new attack surfaces?
+- Are inputs validated at the boundary?
+- Does it handle authentication and authorization correctly?
+{{#ifMultiTenancy config}}
+- Is tenant isolation preserved?
+{{/ifMultiTenancy}}
+
+### 8. Reversibility
+- Can this be rolled back if it goes wrong?
+- Are database migrations reversible?
+- Is there a kill switch (feature flag)?
+- What is the blast radius if it fails?
+
+## Output format
+
+For each dimension:
+
+| Dimension | Verdict | Notes |
+|-----------|---------|-------|
+| Scope | PASS / CONCERN / BLOCK | Brief explanation |
+| Boundaries | PASS / CONCERN / BLOCK | ... |
+| Dependencies | PASS / CONCERN / BLOCK | ... |
+| Testing | PASS / CONCERN / BLOCK | ... |
+| Migration | PASS / CONCERN / BLOCK | ... |
+| Performance | PASS / CONCERN / BLOCK | ... |
+| Security | PASS / CONCERN / BLOCK | ... |
+| Reversibility | PASS / CONCERN / BLOCK | ... |
+
+### Recommendation
+
+One of:
+- **Proceed** -- plan is solid, start implementing.
+- **Proceed with changes** -- address listed concerns, then start.
+- **Rethink approach** -- fundamental issues need resolution first.
